@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.5.0-M3</version>
+		<relativePath/> <!-- Lookup parent from repository -->
+	</parent>
+
+	<packaging>war</packaging>
+	<artifactId>planner</artifactId>
+	<version>development</version>
+
+	<name>Planner / Agenda</name>
+	<inceptionYear>2021</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>Apache 2</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+	<organization>
+		<!-- Not a real organization, but the owner of the copyrights. -->
+		<name>Oscar Westra van Holthe — Kind</name>
+		<url>https://oscar.westravanholthe.nl/</url>
+	</organization>
+
+	<repositories>
+		<repository>
+			<id>Spring Milestones</id>
+			<url>https://repo.spring.io/milestone/</url>
+			<!--<url>https://maven.springframework.org/milestone/</url>-->
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>Spring Milestones</id>
+			<url>https://repo.spring.io/milestone/</url>
+			<!--<url>https://maven.springframework.org/milestone/</url>-->
+		</pluginRepository>
+	</pluginRepositories>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>16</java.version>
+		<itext.version>7.1.14</itext.version>
+		<jackson-bom.version>2.12.2</jackson-bom.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${project.parent.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
+			<exclusions>
+				<!-- Leave tomcat logging as-is -->
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>jul-to-slf4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>kernel</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>io</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>layout</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>forms</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>pdfa</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>pdftest</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mnode.ical4j</groupId>
+			<artifactId>ical4j</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<!-- Required by iCal4j; this is the API only: we're using an iCal4j provided alternative at runtime -->
+			<groupId>javax.cache</groupId>
+			<artifactId>cache-api</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<defaultGoal>verify</defaultGoal>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<testSource>${java.version}</testSource>
+					<testTarget>${java.version}</testTarget>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.cargo</groupId>
+				<artifactId>cargo-maven3-plugin</artifactId>
+				<version>1.9.3</version>
+				<configuration>
+					<container>
+						<containerId>tomcat9x</containerId>
+						<type>embedded</type>
+					</container>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.6</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

@@ -1,0 +1,303 @@
+/*
+Colors:
+- hsl(200,  4.5%, 13.2%) - near black
+- hsl(200,  4.5%, 75.3%) - silver-ish
+- hsl(200, 95.5%, 54.7%) - a blue
+and either:
+- hsl( 60, 95.5%, 54.7%) - a yellow
+or:
+- hsl(  8, 59%,   54.7%) - terra-ish
+- hsl(112, 59%,   54.7%) - a green
+*/
+
+/*
+ * Page layout, backgrounds and base colors.
+ */
+@media not print {
+	html {
+		border-top: 0.25em solid hsl(200, 4.5%, 13.2%);
+		background: url(background.png) repeat scroll top left;
+		/*
+		 * Content width: all but 3em left+right, or 5% as fallback. Creates elastic margin with minimum size on body,
+		 * in combination with both left+right margin = auto and max-width = ... on body.
+		 * Use of padding instead of margin ensures the background extends to the full viewport.
+		 */
+		width: calc(100% - 6em);
+		padding: 0 calc(1em + 2em);
+	}
+	body {
+		position: relative;
+
+		/* Optimal width for reading: 50-75em. */
+		/* Some sources suggest 39em (alphabet and a half) or 24em ("pt*2 in pica (pc)", 1pc = 12pt */
+		max-width: 50em;
+		min-height: 5em;
+		padding: 0 2em 1em;
+		margin: 2em auto 2em;
+		border-radius: 0.125em;
+		border: thin solid hsl(200, 4.5%, 75.3%);
+		box-shadow: 0.05em 0.05em 0.4em hsl(200, 4.5%, 50.2%);
+
+		color: hsl(200, 4.5%, 13.2%);
+		background: white;
+	}
+	/* Begin: slight paper curl */
+	body::before, body::after {
+		position: absolute;
+		width: 10em;
+		height: 2em;
+		content: ' ';
+		left: 0.2em;
+		bottom: 0.8em;
+		background: transparent;
+		transform: skew(-8deg) rotate(-3deg);
+		-webkit-transform: skew(-8deg) rotate(-3deg);
+		/* Same shadow color as the element we're before/after */
+		box-shadow: 0 1em 0.5em hsl(200, 4.5%, 50.2%);
+		z-index: -1;
+	}
+	body::after {
+		left: auto;
+		right: 0.2em;
+		transform: skew(8deg) rotate(3deg);
+        -webkit-transform: skew(8deg) rotate(3deg);
+	}
+	/* End: slight paper curl */
+
+	footer {
+        clear: both;
+		text-align: right;
+	}
+	header nav {
+		float: right;
+	}
+	header nav > * {
+		margin-left: 0.5em;
+	}
+	footer nav {
+		float: left;
+	}
+    footer nav > * {
+		margin-right: 0.5em;
+	}
+}
+@media only print {
+	@page {
+		margin: 15mm;
+	}
+	* {
+		background: transparent !important;
+		color: black !important;
+		border-color: black !important;
+		text-shadow: none !important;
+	}
+	nav {
+		display: none;
+	}
+}
+
+header {
+	background: url("science.png") no-repeat right top;
+	background-size: auto 85%;
+	padding: 0 3rem 0 0;
+	font-family: Georgia, serif;
+	font-size: 2rem;
+	line-height: 3rem;
+	/* Note: both border-image-width (spec) and border-width (chrome bug(?)) are needed for proper display. */
+	border-image: url(border_2_1_1.png) 16 / 0 0 4px 0 repeat;
+	border-width: 0 0 4px 0;
+	margin: 0.5em 0 calc(0.5em - 4px) 0;
+}
+header nav {
+	font-style: normal;
+}
+header nav, footer {
+	font-family: serif;
+	font-variant: small-caps;
+	letter-spacing: 0.05rem;
+	font-size: 0.75rem;
+	line-height: 1.5rem;
+	/* Extra margin adds 1x line height. */
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+}
+header a:link, footer a:link {
+	text-decoration: none;
+	color: inherit;
+}
+header a::after, footer a::after {
+	content: none;
+}
+
+
+/*
+ * Special formatting.
+ */
+.delete {
+    color: hsl(  8, 59%,   54.7%);
+    font-size: 0.75rem;
+    line-height: 1.5rem;
+}
+.error, .ng-invalid {
+    border-color: hsl(  8, 59%,   54.7%);
+}
+
+aside {
+    float: right;
+    width: 22rem;
+}
+
+.disabled, .disabled * {
+	color: grey;
+}
+
+/*
+ * Content formatting: articles.
+ */
+article {
+	/* For use inside sections */
+	padding-bottom: 1.5em;
+	border-top: 0.063em dotted hsl(200, 4.5%, 75.3%);
+	padding-top: 1.437em;
+}
+article:first-of-type {
+	border-top-width: 0;
+	padding-top: 1.5em;
+}
+article > time {
+	color: hsl(200, 4.5%, 13.2%);
+	text-shadow: 0.063em 0.063em hsl(200, 4.5%, 75.3%);
+	text-align: right;
+	float: right;
+	display: block;
+	width: 3.25rem;
+	/* Same top margin as h1, half the font size * line height (i.e. assuming 2-line display) */
+	margin-top: 1.25rem;
+	font-size: 0.75rem;
+	line-height: 1.5rem;
+}
+
+/*
+ * Adjustments for printing.
+ */
+@media only print {
+	pre, blockquote, img, tr {
+		page-break-inside: avoid;
+	}
+	h1, h2, h3, h4 {
+		page-break-after: avoid;
+	}
+	p, h1, h2, h3, h4 {
+		orphans: 3;
+		widows: 3;
+	}
+
+	thead {
+		display: table-header-group;
+	}
+
+	p a[href], p a[href]:visited {
+		text-decoration: underline;
+	}
+	p a[href]:after {
+		content: " (" attr(href) ")";
+	}
+	a::after, a[href^="javascript:"]:after, a[href^="#"]:after {
+		content: "";
+	}
+	abbr[title]:after {
+		content: " (" attr(title) ")";
+	}
+}
+
+
+/*
+ * Basic font usage (incl. line heights), and use of different colors where appropriate.
+ */
+html {
+	font: 100% serif; /* Generic font faces: serif, sans-serif, monospace, cursive, fantasy */
+	line-height: 1.5rem;
+}
+pre, code, samp, kbd, var {
+	font-family: monospace;
+	/* Slightly lighter, displaying slightly softer */
+	color: hsl(200, 4.5%, 26.4%);
+}
+pre {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	overflow: auto;
+}
+h1, h2, h3 {
+	font-weight: bold;
+}
+h1 {
+	font-size: 1.5rem;
+	line-height: 3rem;
+	margin-top: 1.25rem;
+	margin-bottom: 0.25rem;
+}
+h2 {
+	font-size: 1.2rem;
+	line-height: 3rem;
+	margin-top: 1.5rem;
+	margin-bottom: 0;
+}
+h3 {
+	font-size: 1rem;
+	line-height: 1.5rem;
+	margin-top: 1.5rem;
+	margin-bottom: 0;
+}
+p {
+	margin: 0 0.5rem 0 0;
+	padding: 0;
+	text-align: justify;
+}
+li {
+	line-height: 1.5rem;
+	text-align: justify;
+}
+img.inline {
+	display:inline-block;
+	vertical-align: text-bottom;
+}
+dfn, abbr, acronym {
+	border-bottom: thin dotted hsl(200, 95.5%, 26.4%);
+	box-shadow: 0 -0.25em 0.25em -0.25em hsl(200, 95.5%, 26.4%) inset;
+}
+s {
+	border-bottom: thin dotted hsl(200, 95.5%, 26.4%);
+}
+mark {
+	background: hsl(200, 95.5%, 83.1%);
+}
+
+
+/*
+ * Generic styling inside text. Does not include font styling.
+ */
+/* Quotes */
+html {
+	quotes: "\201C" "\201D" "\2018" "\2019"; /* high-high */
+}
+html:lang(nl) {
+	quotes: "\201E" "\201D" "\201A" "\2019"; /* low-high */
+}
+cite::before, blockquote::before, q::before {
+	content:open-quote;
+}
+cite::after, blockquote::after, q::after {
+	content:close-quote;
+}
+/*Preformatted text */
+pre {
+	margin-left: 2em;
+	text-align: left;
+}
+pre, code, samp, kbd, var {
+	white-space: pre;
+}
+td, th {
+	vertical-align: top;
+}

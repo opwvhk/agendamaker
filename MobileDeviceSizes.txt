@@ -1,0 +1,19 @@
+
+Samsung Galaxy J5 (2016)
+	360 x 640 (pixel ratio 2)
+	Mozilla/5.0 (Android 7.1.1; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0
+
+Samsung Galaxy A51
+	412 x 914 (pixel ration 2,625)
+	Mozilla/5.0 (Android 10.0; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0
+
+At ratio 2:
+	412 * 2.625 ~= 1081 (actual: 1080)
+	914 * 2,625 ~= 2399 (actual: 2400)
+
+	540 x 1200
+
+
+
+
+
