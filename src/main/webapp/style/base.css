@@ -51,7 +51,6 @@ or:
 		bottom: 0.8em;
 		background: transparent;
 		transform: skew(-8deg) rotate(-3deg);
-		-webkit-transform: skew(-8deg) rotate(-3deg);
 		/* Same shadow color as the element we're before/after */
 		box-shadow: 0 1em 0.5em hsl(200, 4.5%, 50.2%);
 		z-index: -1;
@@ -60,7 +59,6 @@ or:
 		left: auto;
 		right: 0.2em;
 		transform: skew(8deg) rotate(3deg);
-        -webkit-transform: skew(8deg) rotate(3deg);
 	}
 	/* End: slight paper curl */
 
@@ -145,6 +143,7 @@ header a::after, footer a::after {
 aside {
     float: right;
     width: 22rem;
+	max-width: 50%;
 }
 
 .disabled, .disabled * {

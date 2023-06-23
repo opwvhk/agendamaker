@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality"
+     fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 512 512">
+	<path fill-rule="nonzero"
+	      d="M 139 215 L 205 214 C 226 227 246 243 262 261 C 284 226 388 101 425 72 H 492 C 437 133 300 329 265 398 C 229 321 189 269 134 231 L 139 215 Z
+	      M 374 28 A 256 256 0 1 0 495 164 L 455 215 A 204 204 0 1 1 330 67 Z"/>
+</svg>

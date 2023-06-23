@@ -16,14 +16,13 @@ import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.layout.LayoutArea;
 import com.itextpdf.layout.layout.LayoutContext;
 import com.itextpdf.layout.layout.LayoutResult;
-import com.itextpdf.layout.property.AreaBreakType;
-import com.itextpdf.layout.property.FontKerning;
-import com.itextpdf.layout.property.Property;
-import com.itextpdf.layout.property.UnitValue;
+import com.itextpdf.layout.properties.*;
 import com.itextpdf.layout.renderer.IRenderer;
+import com.itextpdf.svg.converter.SvgConverter;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
@@ -58,14 +57,15 @@ public class WritableDocument implements Closeable {
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output)
 		throws IOException {
+		font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+		fontSize = DEFAULT_FONT_SIZE;
+
 		PdfWriter pdfWriter = new PdfWriter(output);
 		pdfDocument = new PdfDocument(pdfWriter);
 		pdfDocument.getCatalog().setPageLayout(PdfName.TwoColumnLeft);
 		pdfDocument.setDefaultPageSize(pageSize);
-		document = new Document(pdfDocument);
-
-		font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-		fontSize = DEFAULT_FONT_SIZE;
+		document = new Document(pdfDocument).setFont(font).setFontSize(fontSize).setFontKerning(FontKerning.YES);
+		document.setProperty(Property.LEADING, new Leading(Leading.FIXED, DEFAULT_LINE_SPACING * fontSize));
 
 		newPageHandler = (ignored1, ignored2) -> {};
 	}
@@ -73,12 +73,14 @@ public class WritableDocument implements Closeable {
 	public WritableDocument(final PageSize pageSize, float innerMargin, float outerMargin, float topBottomMargin, final OutputStream output)
 		throws IOException {
 		this(pageSize, output);
+		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
 		withMargins(innerMargin, outerMargin, topBottomMargin);
 	}
 
 	public WritableDocument(final PageSize pageSize, final OutputStream output, final BiConsumer<Integer, Document> newPageHandler)
 		throws IOException {
 		this(pageSize, output);
+		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
 		withNewPageHandler(newPageHandler);
 	}
 
@@ -99,6 +101,12 @@ public class WritableDocument implements Closeable {
 	public void close() throws IOException {
 		// Also closes pdfDocument and pdfWriter.
 		document.close();
+	}
+
+	public Image loadSvgImageResource(String resourceName) throws IOException {
+		try (InputStream stream = getClass().getResourceAsStream(resourceName)) {
+			return SvgConverter.convertToImage(requireNonNull(stream), pdfDocument);
+		}
 	}
 
 	public Rectangle getEffectiveArea() {
@@ -185,8 +193,7 @@ public class WritableDocument implements Closeable {
 
 
 	public List createList() {
-		return createElement(font, fontSize, List::new)
-			;
+		return createElement(font, fontSize, List::new);
 	}
 
 
@@ -281,7 +288,7 @@ public class WritableDocument implements Closeable {
 	 *
 	 * @param element       the element whose height to calculate
 	 * @param availableArea the available ares
-	 * @return the bounding box of the rendered of the element, or {@code null} if the element doesn't fit
+	 * @return the bounding box of the rendered element, or {@code null} if the element doesn't fit
 	 */
 	public Rectangle calculateBBox(BlockElement<?> element, Rectangle availableArea) {
 		// Determine a (fictive) layout area of the right size.

@@ -1,9 +1,8 @@
-//import { createApp } from './vue.v3.0.11.esm.js';
-import {createApp} from './vue.v3.0.11.esm.min.js';
+/*
+ * Downloaded on 2023-06-23 using documentation from https://vuejs.org/guide/quick-start.html#using-vue-from-cdn
+ */
+import {createApp} from './unpkg.com_vue@3.3.4_dist_vue.esm-browser.js';
 import Message from './components/message.js';
-
-//import {DateTime, Settings} from './luxon.v1.26.0.esm.js';
-//Settings.defaultLocale = 'nl';
 
 const cookies = {
 	get(/*String*/name) {
@@ -44,12 +43,35 @@ let app = createApp({
 	data() {
 		return {
 			showDateTitleTableExplanation: true,
-			messages: ['Foo'],
+			messages: [],
 			title: "",
 			subtitle: "",
+			timeTablePages: 3,
 			notesPages: 1,
+			mindmapPages: 2,
 			dateTitles: [
-				{date: "", text: ""}
+				{date: "2023-09-04", text: ""},
+				{date: "2023-10-02", text: "Projectweek 1"},
+				{date: "2023-10-07", text: ""},
+				{date: "2023-10-23", text: "Herfstvakantie"},
+				{date: "2023-10-30", text: ""},
+				{date: "2023-12-25", text: "Kerstvakantie"},
+				{date: "2024-01-08", text: ""},
+				{date: "2024-02-19", text: "Voorjaarsvakantie"},
+				{date: "2024-02-26", text: ""},
+				{date: "2024-04-01", text: "2e Paasdag"},
+				{date: "2024-04-02", text: "Projectweek 2"},
+				{date: "2024-04-07", text: ""},
+				{date: "2024-04-22", text: "Meivakantie"},
+				{date: "2024-05-06", text: ""},
+				{date: "2024-05-09", text: "Hemelvaart"},
+				{date: "2024-05-10", text: "dag na Hemelvaart (vrij)"},
+				{date: "2024-05-11", text: ""},
+				{date: "2024-05-20", text: "2e Pinksterdag"},
+				{date: "2024-05-21", text: ""},
+				{date: "2024-07-01", text: "Toetsweek"},
+				{date: "2024-07-06", text: ""},
+				{date: "2024-07-20", text: "Zomervakantie"}
 			],
 			allInputsAreValid: false
 		};
@@ -74,7 +96,7 @@ let app = createApp({
 		},
 		checkInputs() {
 			const allInputs = document.getElementsByTagName('input');
-			for(let inputField of allInputs) {
+			for (let inputField of allInputs) {
 				if (!inputField.validity.valid) {
 					this.allInputsAreValid = false;
 					return true;
@@ -93,30 +115,35 @@ let app = createApp({
 			dateTitles.push({});
 		},
 		generatePlanner() {
+			// noinspection JSUnresolvedReference: Vue actually changes the value of 'this' to the model (data() updated with the input values)
 			const options = {
 				method: 'POST',
 				body: JSON.stringify({
 					title: this.title,
 					subtitle: this.subtitle,
+					timeTablePages: this.timeTablePages,
 					notesPages: this.notesPages,
+					mindmapPages: this.mindmapPages,
+					startDate: this.startDate,
+					endDate: this.endDate,
 					dateTitles: this.dateTitles
 				}),
 				headers: {
 					'Content-Type': 'application/json'
 				}
 			};
-			goFetch('rest', options, response => {
-				const filename = determineFilename(response.headers, 'planagenda.pdf');
-				return response.blob().then(blob => downloadBlob(blob, filename));
-			}, response => response.text().then(error => this.messages.push(error)));
+			goFetch('rest', options,
+					response => {
+						const filename = determineFilename(response.headers, 'planagenda.pdf');
+						return response.blob().then(blob => downloadBlob(blob, filename));
+					},
+					json => json.text().then(error => this.messages.push(error)),
+					error => console.log(error)
+			);
 		}
 	}
 });
 app.mount('body');
-
-//function formatDate(dateStr) {
-//	return dateStr.length > 0 ? DateTime.fromISO(dateStr).toLocaleString(DateTime.DATE_FULL) : '';
-//}
 
 function compare(o1, o2) {
 	return o1 < o2 ? -1 : o1 > o2 ? 1 : 0;

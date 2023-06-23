@@ -13,18 +13,20 @@
 
 	<link rel="stylesheet" type="text/css" href="style/base.css"/>
 	<link rel="stylesheet" type="text/css" href="style/index.css"/>
+	<link rel="stylesheet" type="text/css" href="style/debugging.css"/>
 
 	<link rel="stylesheet" type="text/css" href="./scripts/components/message.css"/>
 	<script type="module" src="./scripts/app.js"></script>
 	<title>Planagenda</title>
 </head>
 <body>
+<!--<span class="debugging size"></span>-->
 
 <header>
 	Planagenda
-	<nav>
+	<!--<nav> Disabled: the website does not exist anymore
 		<a href="https://scs.westravanholthe.nl/">Terug</a>
-	</nav>
+	</nav>-->
 </header>
 
 <message v-model="messages"></message>
@@ -34,36 +36,73 @@
 	<details ref="dateTitleTableExplanation" @click="toggleDateTitleTableExplanation">
 		<summary>Hoe werkt het?</summary>
 		<p>
-			Hierboven vult u de titel en subtitel van de planner in. Bijvoorbeeld "Planagenda 2020" en "toetsperiode 1".
+			Hieronder vult u de titel en subtitel van de planner in. Bijvoorbeeld "Planagenda 2020" en "toetsperiode 1".
 		</p>
 		<p>
-			Het aantal pagina's voor notities is een minimum: indien nodig worden er pagina's toegevoegd opdat de planner als boekje afgedrukt kan worden.
+			Daaronder komen de aantallen pagina's voor tijdschema's, notities en mindmaps. Deze aantallen zijn minima: indien nodig worden er pagina's
+			toegevoegd opdat de planner als boekje afgedrukt kan worden.
 		</p>
 		<p>
-			De tabel hieronder bepaalt hoe de planagenda wordt gevuld. Na oplopend sorteren op datum, zal de planagenda starten op de laatste maandag
-			op of voor de eerste datum, en eindigen op de laatste zondag op of na de laatste datum. De teksten naast de data worden, indien
-			gevuld, vanaf die datum bij elke dag in de planagenda gezet (uitzondering is de eerste tekst; die komt vanaf het begin).
+			Tot slot volgt een tabel die bepaalt hoe de planagenda wordt gevuld. Na oplopend sorteren op datum, zal de planagenda starten op de maandag van de
+			week met de eerste datum, en eindigen op de zondag van de week van de laatste datum. De teksten naast de data worden, indien gevuld, vanaf die datum
+			bij elke dag in de planagenda gezet (de eerste tekst is en uitzondering; die tekst komt vanaf het begin).
 		</p>
 		<div style="display: inline-block; margin: 1.5rem 3rem 0 0;">
 			<p>Als je bijvoorbeeld het volgende invult:</p>
 			<table>
-				<tr><th>Vanaf</th><th>Dagtekst</th></tr>
-				<tr><td>(di) 20 april 2021</td><td>Toetsweek</td></tr>
-				<tr><td>(wo) 21 april 2021</td><td>&nbsp;</td></tr>
-				<tr><td>(vr) 23 april 2021</td><td>Meivakantie</td></tr>
+				<tr>
+					<th>Vanaf</th>
+					<th>Dagtekst</th>
+				</tr>
+				<tr>
+					<td>(di) 20 april 2021</td>
+					<td>Toetsweek</td>
+				</tr>
+				<tr>
+					<td>(wo) 21 april 2021</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>(vr) 23 april 2021</td>
+					<td>Meivakantie</td>
+				</tr>
 			</table>
 		</div>
 		<div style="display: inline-block; margin-top: 1.5rem;">
 			<p>Dan krijg je dit resultaat:</p>
 			<table>
-				<tr><th>Datum</th><th>Dagtekst</th></tr>
-				<tr><td>(ma) 19 april 2021</td><td>Toetsweek</td></tr>
-				<tr><td>(di) 20 april 2021</td><td>Toetsweek</td></tr>
-				<tr><td>(wo) 21 april 2021</td><td>&nbsp;</td></tr>
-				<tr><td>(do) 22 april 2021</td><td>&nbsp;</td></tr>
-				<tr><td>(vr) 23 april 2021</td><td>Meivakantie</td></tr>
-				<tr><td>(za) 24 april 2021</td><td>Meivakantie</td></tr>
-				<tr><td>(zo) 25 april 2021</td><td>Meivakantie</td></tr>
+				<tr>
+					<th>Datum</th>
+					<th>Dagtekst</th>
+				</tr>
+				<tr>
+					<td>(ma) 19 april 2021</td>
+					<td>Toetsweek</td>
+				</tr>
+				<tr>
+					<td>(di) 20 april 2021</td>
+					<td>Toetsweek</td>
+				</tr>
+				<tr>
+					<td>(wo) 21 april 2021</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>(do) 22 april 2021</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>(vr) 23 april 2021</td>
+					<td>Meivakantie</td>
+				</tr>
+				<tr>
+					<td>(za) 24 april 2021</td>
+					<td>Meivakantie</td>
+				</tr>
+				<tr>
+					<td>(zo) 25 april 2021</td>
+					<td>Meivakantie</td>
+				</tr>
 			</table>
 		</div>
 	</details>
@@ -75,8 +114,14 @@
 	<label for="subtitle">Subtitel:</label>
 	<input id="subtitle" type="text" v-model="subtitle" placeholder="Geen extra tekst" @change="checkInputs"/>
 
+	<label for="timeTablePages">Tijdschema:</label>
+	<span><input id="timeTablePages" type="number" v-model="timeTablePages" required="required" @change="checkInputs"/> pagina's</span>
+
 	<label for="notesPages">Notities:</label>
 	<span><input id="notesPages" type="number" v-model="notesPages" required="required" @change="checkInputs"/> pagina's</span>
+
+	<label for="mindmapPages">Mindmaps:</label>
+	<span><input id="mindmapPages" type="number" v-model="mindmapPages" required="required" @change="checkInputs"/> pagina's</span>
 </section>
 <section id="dateRanges">
 	<p>
@@ -91,7 +136,7 @@
 		<tr v-for="dateTitle in dateTitles">
 			<td>
 				<button type="button" @click="removeDateTitle(dateTitles, dateTitle)"><img src="./images/calendar-minus.png" alt="Verwijderen"
-					style="height: 0.9em; vertical-align: baseline;"/></button>
+						style="height: 0.9em; vertical-align: baseline;"/></button>
 			</td>
 			<td><label><input type="date" v-model="dateTitle.date" required="required" @change="checkInputs"/></label></td>
 			<td><label><input type="text" v-model="dateTitle.text" placeholder="Geen tekst" @change="checkInputs"/></label></td>
@@ -99,11 +144,12 @@
 		<tr>
 			<td>
 				<button type="button" @click="addDateTitle(dateTitles)"><img src="images/calendar-plus.png" alt="Toevoegen"
-					style="height: 0.9em; vertical-align: baseline;"/></button>
+						style="height: 0.9em; vertical-align: baseline;"/></button>
 			</td>
 			<td>
-				<button type="button" @click="sortDateTitles(dateTitles)"><!--&#x21D5;--><img src="./images/pdf-file.svg" alt=""
-						style="height: 0.9em; vertical-align: baseline;"/> Sorteer</button>
+				<button type="button" @click="sortDateTitles(dateTitles)"><!--&#x21D5;--><img src="images/sort-down-arrow.svg" alt=""
+						style="height: 0.9em; vertical-align: baseline;"/> Sorteer
+				</button>
 			</td>
 			<td>&nbsp;</td>
 		</tr>
@@ -111,7 +157,8 @@
 </section>
 <section id="actions">
 	<button type="button" :disabled="!allInputsAreValid" @click="generatePlanner()"><img src="./images/pdf-file.svg" alt=""
-		style="height: 0.9em; vertical-align: baseline;"/> Genereer PDF</button>
+			style="height: 0.9em; vertical-align: baseline;"/> Genereer PDF
+	</button>
 </section>
 
 </main>

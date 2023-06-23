@@ -32,6 +32,10 @@ section#globalSettings input[type=checkbox], section#globalSettings input[type=r
 section#globalSettings input[type=number] {
 	max-width: 5em;
 }
+section#globalSettings input[type=date] {
+	max-width: 9em;
+}
+
 
 section table {
 	display: grid;
