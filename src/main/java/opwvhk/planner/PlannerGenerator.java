@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -47,26 +48,26 @@ public class PlannerGenerator {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
 			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2023 – 2024", 2, 3, 3,
 					java.util.List.of(
-							new DateTitle(LocalDate.of(2023, Month.SEPTEMBER, 4), ""),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 2), "Projectweek 1"),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 7), ""),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 23), "Herfstvakantie"),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 30), ""),
-							new DateTitle(LocalDate.of(2023, Month.DECEMBER, 25), "Kerstvakantie"),
-							new DateTitle(LocalDate.of(2024, Month.JANUARY, 8), ""),
-							new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 19), "Voorjaarsvakantie"),
-							new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 26), ""),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 1), "2e Paasdag"),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 2), "Projectweek 2"),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 7), ""),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 22), "Meivakantie"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 6), ""),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 9), "Hemelvaart"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 10), "dag na Hemelvaart (vrij)"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 11), ""),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 20), "2e Pinksterdag"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 21), ""),
-							new DateTitle(LocalDate.of(2024, Month.JULY, 1), "Toetsweek"),
+							//new DateTitle(LocalDate.of(2023, Month.SEPTEMBER, 4), ""),
+							//new DateTitle(LocalDate.of(2023, Month.OCTOBER, 2), "Projectweek 1"),
+							//new DateTitle(LocalDate.of(2023, Month.OCTOBER, 7), ""),
+							//new DateTitle(LocalDate.of(2023, Month.OCTOBER, 23), "Herfstvakantie"),
+							//new DateTitle(LocalDate.of(2023, Month.OCTOBER, 30), ""),
+							//new DateTitle(LocalDate.of(2023, Month.DECEMBER, 25), "Kerstvakantie"),
+							//new DateTitle(LocalDate.of(2024, Month.JANUARY, 8), ""),
+							//new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 19), "Voorjaarsvakantie"),
+							//new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 26), ""),
+							//new DateTitle(LocalDate.of(2024, Month.APRIL, 1), "2e Paasdag"),
+							//new DateTitle(LocalDate.of(2024, Month.APRIL, 2), "Projectweek 2"),
+							//new DateTitle(LocalDate.of(2024, Month.APRIL, 7), ""),
+							//new DateTitle(LocalDate.of(2024, Month.APRIL, 22), "Meivakantie"),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 6), ""),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 9), "Hemelvaart"),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 10), "dag na Hemelvaart (vrij)"),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 11), ""),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 20), "2e Pinksterdag"),
+							//new DateTitle(LocalDate.of(2024, Month.MAY, 21), ""),
+							//new DateTitle(LocalDate.of(2024, Month.JULY, 1), "Toetsweek"),
 							new DateTitle(LocalDate.of(2024, Month.JULY, 6), ""),
 							new DateTitle(LocalDate.of(2024, Month.JULY, 20), "Zomervakantie")
 					)
@@ -96,7 +97,7 @@ public class PlannerGenerator {
 	 * @param plannerDescription a description of the planner to generate
 	 */
 	public PlannerGenerator(PlannerDescription plannerDescription) {
-		java.util.List<DateTitle> dateTitles = plannerDescription.dateTitles();
+		java.util.List<DateTitle> dateTitles = new ArrayList<>(plannerDescription.dateTitles());
 
 		NavigableMap<LocalDate, String> sortedDateTitles = plannerDescription.sortedDateTitles();
 		LocalDate startDate = sortedDateTitles.firstKey().with(TemporalAdjusters.previousOrSame(MONDAY));
@@ -165,16 +166,16 @@ public class PlannerGenerator {
 	public void generate(WritableDocument document) throws IOException, PdfException {
 		//document.startNewPage();
 		addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle());
-		addClassSchedulesAndVacations(document);
 		addEmergencyPlan(document);
+		addClassSchedulesAndVacations(document);
 		//addImportantDates(document);
+		addHowToSurviveTheFreshmanYear(document);
 		addPrerequisitesForLearning(document);
 		addPlanningInstructions(document);
 		addTimeSpentTables(document, plannerDescription.timeTablePages());
 
 		addPlanningWeeks(document, plannerDescription.sortedDateTitles());
 
-		addHowToSurviveTheFreshmanYear(document);
 		addNotesPages(document, plannerDescription.notesPages());
 		addMindMapPages(document, plannerDescription.mindmapPages());
 
@@ -307,8 +308,9 @@ public class PlannerGenerator {
 						""".replace("\n", " ")));
 		document.addInFlow(document.createParagraph()
 				.add("""
-						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het leren opgesteld. Deze voorwaarden zijn
-						belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom maar goed door.""".replace("\n", " "))
+						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het leren opgesteld.
+						Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom maar goed door.
+						""".replace("\n", " ").strip())
 				.add("\n\n"));
 
 		float indent = mmToPt(10);
@@ -316,7 +318,7 @@ public class PlannerGenerator {
 				.add(bold("Laat je niet afleiden")));
 		document.addInFlow(document.createParagraph()
 				.setMarginLeft(indent)
-				.add("Zorg dat alles wat jou kan afleiden (denk aan telefoon, computer, te veel tabbladen open) niet bij jou in de buurt is.")
+				.add("Zorg dat alles wat je kan afleiden (denk aan telefoon, computer, te veel tabbladen open) niet bij jou in de buurt is.")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Zoek een rustige plaats")));
@@ -351,6 +353,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("\nHERHALEN, HERHALEN, HERHALEN")));
 		document.addInFlow(document.createParagraph()
 				.add("""
+						Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het allerbelangrijkste.
 						Wanneer je veel aandacht aan iets geeft, worden er verbindingen aangelegd in je hersenen, waardoor je
 						er steeds beter in wordt! In de eerste 20 minuten na het leren, kan je al zo’n 40% vergeten. Dat is
 						bijna de helft! Herhalen zorgt ervoor dat je minder vergeet. Wanneer je dus veel aandacht aan iets
@@ -396,7 +399,7 @@ public class PlannerGenerator {
 		list.add("Plan je huiswerk en toetsen in. Hak het in kleine stukjes.");
 		list.add("Weet je niet wat het huiswerk of leerwerk is? Check de studiewijzer!");
 		list.add("Dan ga je aan de slag! Nummer de taken. Begin bij de belangrijkste taak.");
-		list.add("Heb je het aan het eind van de dag nog niet alles afgekregen? Plan deze taken opnieuw in.");
+		list.add("Heb je het aan het eind van de dag nog niet alles af gekregen? Plan deze taken opnieuw in.");
 		document.addInFlow(list);
 
 		document.startNewPage();
@@ -406,10 +409,12 @@ public class PlannerGenerator {
 	private void addTimeSpentTables(WritableDocument document, int numberOfPages) {
 		LOGGER.debug("Adding {} time spent tables", numberOfPages);
 		for (int i = 0; i < numberOfPages; i++) {
-			if (i > 0) {
+			addTimeSpentTable(document);
+
+			// Skip last 'new page'
+			if (i < numberOfPages - 1) {
 				document.startNewPage();
 			}
-			addTimeSpentTable(document);
 		}
 	}
 
@@ -552,54 +557,81 @@ public class PlannerGenerator {
 
 	private void addHowToSurviveTheFreshmanYear(WritableDocument document) {
 		LOGGER.debug("Adding guide to survive as a freshman");
-		document.startNewPage();
 		document.addInFlow(document.createParagraph()
 				.add(bold("Hoe overleef ik de brugklas\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
+
+		// First heading: do not start with a newline (for the rest: do)
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik te laat komt?")));
 		document.addInFlow(document.createParagraph().add("""
-				Als je te laat op school bent of te laat voor een les, haal je altijd eerst een telaatbriefje bij de conciërges. Met dit
-				briefje mag jij de les in.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik ziek ben?")));
-		document.addInFlow(document.createParagraph().add("Als je ziek bent bellen je ouders naar school om je ziek te melden.\n\u00A0"));
+				Als je te laat op school bent of te laat voor een les, haal je altijd eerst een telaatbriefje bij de conciërges. Met zo'n
+				briefje mag jij de les in, of je nu geoorloofd te laat was of niet.
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik ziek ben?")));
+		document.addInFlow(document.createParagraph()
+				.add("Als je ziek bent, dan bellen je ouders voor het eerste lesuur naar school om je ziek te melden.\n\u00A0"));
+
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik ziek naar huis wil?")));
 		document.addInFlow(document.createParagraph().add("""
 				Wanneer je je tijdens lestijd opeens niet lekker voelt, dan ga je naar je docent en geef je aan dat je naar huis wilt,
-				je meld je daarna af bij de conciërges, zij bellen naar je ouders.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik een toets gemist heb?")));
+				je meld je daarna af bij de conciërges.
+				Als je thuis bent, laat je je ouders naar school bellen dat je weer veilig thuis bent.
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik een toets gemist heb?")));
 		document.addInFlow(document.createParagraph().add("""
-				Je geeft bij je vakdocent aan dat je een toets hebt gemist, je vakdocent zorgt dat er een inhaaltoets voor je klaar ligt in de
-				mediatheek. Elke dinsdagmiddag va 14:15-15:15 is er een moment om toetsen in te halen.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Neem ik mijn jas en gymtas mee naar het lokaal?")));
+				Je geeft bij je vakdocent aan dat je een toets gemist hebt en vraagt de vakdocent wanneer je de toets kunt inhalen.
+				Je vakdocent zorgt dat er een inhaaltoets voor je klaar ligt in de mediatheek.
+				Elke dinsdagmiddag tussen 14:15-15:15 is er een moment om toetsen in te halen.
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nNeem ik mijn jas en gymtas mee naar het lokaal?")));
 		document.addInFlow(document.createParagraph().add("""
 				Op Huizermaat heeft elke leerling een eigen kluisje. Hierin kun je je gymtas en je jas bewaren.
 				Tijdens de gymles kun je ook je chromebook in je kluisje bewaren.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Heeft elke leerling een chromebook?")));
-		document.addInFlow(document.createParagraph().add("""
-				Ja, op Huizermaat gebruiken we een chromebook ter ondersteuning van het onderwijs, we gebruiken dus ook boeken.
-				Een chromebook lijkt op een laptop.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Mag je je telefoon gebruiken tijdens de les?")));
-		document.addInFlow(document.createParagraph().add("""
-				Nee, tijdens de lessen bewaar je je telefoon terwijl die uit is in je tas of in je kluis.
-				Een telefoon leidt immers veel te veel af van wat er tijdens de les gebeurt.
-				Als je internet nodig hebt voor een schoolopdracht, gebruik je je chromebook.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Zijn alle gymlessen in de gymzalen van Huizermaat?")));
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nZijn alle gymlessen in de gymzalen van Huizermaat?")));
 		document.addInFlow(document.createParagraph().add("""
 				Nee, vanaf april tot aan de herfstvakantie gymmen we buiten op de sportvelden en de atletiekbaan,
 				op twee minuten van de school.
-				""".replace("\n", " ") + "\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("Geven jullie veel huiswerk?")));
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nGebruikt elke leerling een chromebook?")));
 		document.addInFlow(document.createParagraph().add("""
+				Ja, op Huizermaat gebruiken we een chromebook ter ondersteuning van het onderwijs; we gebruiken dus ook boeken.
+				Een chromebook lijkt op een laptop.
+				Vanaf de herfstvakantie zullen we ze in de lessen gaan gebruiken en moet je dus altijd een opgeladen chromebook bij je hebben.
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nMag je je telefoon gebruiken tijdens de les?")));
+		document.addInFlow(document.createParagraph().add("""
+				Nee, tijdens de lessen bewaar je je telefoon, terwijl die uit is, in je tas of in je kluis.
+				Een telefoon leidt immers veel te veel af van wat er tijdens de les gebeurt.
+				Als je internet nodig hebt voor een schoolopdracht, gebruik je je chromebook.
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nWaarom geven we huiswerk?")));
+		document.addInFlow(document.createParagraph().add("""
+				We geven huiswerk omdat je dan nog eens rustig kunt oefenen met de stof die in de les is behandeld.
+				Of je maakt juist huiswerk om je voor te bereiden op de les die komen gaat.
 				We bouwen het rustig op. Na de herfstvakantie moet je rekenen op één à anderhalf uur per dag.
 				Als je goed meedoet tijdens de les, scheelt dat in wat je thuis moet doen. Op school kun je bovendien de docent of
 				medeleerlingen om hulp vragen. Het is vooral handig om leerwerk rustig thuis te doen.
 				Ook tijdens het weekend moet je vaak iets voor school doen.
-				        """.replace("\n", " ")));
+				""".replace("\n", " ")));
+
+		document.addInFlow(document.createParagraph().add(bold("\nWat zijn de afspraken in de leszone?")));
+		document.addInFlow(document.createParagraph().add("""
+				Zodra je door de klapdeuren een leszone in loopt, gelden de volgende afspraken:
+				""".replace("\n", " ")));
+		List learningZoneRules = new List().setListSymbol("-");
+		learningZoneRules.add("Je praat zachtjes en loopt rustig");
+		learningZoneRules.add("Je hebt geen jas aan (deze ligt al in je kluis)");
+		learningZoneRules.add("Je hebt je telefoon niet bij je (deze ligt al in je kluis)");
+		learningZoneRules.add("Eten en drinken is niet toegestaan in de leszone (wel daarbuiten)");
+		document.addInFlow(learningZoneRules);
+		document.startNewPage();
 	}
 
 	private void addNotesPages(WritableDocument document, int numberOfNotesPages) {
