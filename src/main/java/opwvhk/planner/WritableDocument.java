@@ -54,9 +54,9 @@ public class WritableDocument implements Closeable {
 	private final float fontSize;
 
 	private BiConsumer<Integer, Document> newPageHandler;
+	private boolean pageIsEmpty;
 
-	private WritableDocument(final PageSize pageSize, final OutputStream output)
-		throws IOException {
+	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
 		font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
 		fontSize = DEFAULT_FONT_SIZE;
 
@@ -68,17 +68,17 @@ public class WritableDocument implements Closeable {
 		document.setProperty(Property.LEADING, new Leading(Leading.FIXED, DEFAULT_LINE_SPACING * fontSize));
 
 		newPageHandler = (ignored1, ignored2) -> {};
+		pageIsEmpty = true;
 	}
 
 	public WritableDocument(final PageSize pageSize, float innerMargin, float outerMargin, float topBottomMargin, final OutputStream output)
-		throws IOException {
+			throws IOException {
 		this(pageSize, output);
 		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
 		withMargins(innerMargin, outerMargin, topBottomMargin);
 	}
 
-	public WritableDocument(final PageSize pageSize, final OutputStream output, final BiConsumer<Integer, Document> newPageHandler)
-		throws IOException {
+	public WritableDocument(final PageSize pageSize, final OutputStream output, final BiConsumer<Integer, Document> newPageHandler) throws IOException {
 		this(pageSize, output);
 		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
 		withNewPageHandler(newPageHandler);
@@ -87,18 +87,17 @@ public class WritableDocument implements Closeable {
 	/**
 	 * Start a new page in the document. Mirrors the left & right margins.
 	 */
-	public void startNewPage() {
+	public void startNewPage(boolean alsoStartNewPageIfLastOneIsEmpty) {
 		if (pdfDocument.getNumberOfPages() == 0) {
 			pdfDocument.addNewPage();
-		} else {
+		} else if (alsoStartNewPageIfLastOneIsEmpty || !pageIsEmpty) {
 			document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 		}
 		newPageHandler.accept(pdfDocument.getNumberOfPages(), document);
 	}
 
-
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		// Also closes pdfDocument and pdfWriter.
 		document.close();
 	}
@@ -138,28 +137,32 @@ public class WritableDocument implements Closeable {
 	public WritableDocument draw(BiConsumer<PdfCanvas, Rectangle> consumer) {
 		final PdfPage page = pdfDocument.getLastPage();
 		PdfCanvas pdfCanvas = new PdfCanvas(page);
-		final Rectangle pageSize = page.getPageSize();
+		Rectangle area = getEffectiveArea();
 		pdfCanvas.saveState();
 		try {
-			consumer.accept(pdfCanvas, pageSize);
+			consumer.accept(pdfCanvas, area);
 		} finally {
 			pdfCanvas.restoreState();
 		}
+		pageIsEmpty = false;
 		return this;
 	}
 
 	public WritableDocument addInFlow(IBlockElement element) {
 		document.add(element);
+		pageIsEmpty = false;
 		return this;
 	}
 
 	public WritableDocument addInFlow(Image element) {
 		document.add(element);
+		pageIsEmpty = false;
 		return this;
 	}
 
 	public WritableDocument addInFlow(AreaBreak element) {
 		document.add(element);
+		pageIsEmpty = false;
 		return this;
 	}
 
@@ -168,8 +171,7 @@ public class WritableDocument implements Closeable {
 	}
 
 	public Paragraph createParagraph(Border border) {
-		return createParagraph(font, fontSize)
-			.setBorder(requireNonNull(border));
+		return createParagraph(font, fontSize).setBorder(requireNonNull(border));
 	}
 
 	public Paragraph createParagraph(float fontSize) {
@@ -177,25 +179,16 @@ public class WritableDocument implements Closeable {
 	}
 
 	public Paragraph createParagraph(PdfFont font, float fontSize) {
-		return createElement(font, fontSize, Paragraph::new)
-			.setFixedLeading(fontSize * DEFAULT_LINE_SPACING);
+		return createElement(font, fontSize, Paragraph::new).setFixedLeading(fontSize * DEFAULT_LINE_SPACING);
 	}
 
 	public <E extends BlockElement<E>> E createElement(PdfFont font, float fontSize, Supplier<E> creator) {
-		return creator.get()
-			.setPadding(0)
-			.setMargin(0)
-			.setMarginBottom(6)
-			.setFont(font == null ? this.font : font)
-			.setFontSize(fontSize < 0 ? this.fontSize : fontSize)
-			.setFontKerning(FontKerning.YES);
+		return creator.get().setPadding(0).setMargin(0).setMarginBottom(6).setFont(font == null ? this.font : font).setFontSize(fontSize < 0 ? this.fontSize : fontSize).setFontKerning(FontKerning.YES);
 	}
-
 
 	public List createList() {
 		return createElement(font, fontSize, List::new);
 	}
-
 
 	/**
 	 * Add a block element at the top of the specified area. Returns the remaining part of the area, below the added element.
@@ -251,6 +244,7 @@ public class WritableDocument implements Closeable {
 		final Rectangle remainingArea = area.clone().decreaseHeight(bbox.getHeight());
 
 		document.add(element);
+		pageIsEmpty = false;
 		return remainingArea;
 	}
 
@@ -319,8 +313,8 @@ public class WritableDocument implements Closeable {
 	}
 
 
-	public static float mmToPt(final float points) {
-		return (float) Math.floor(points * MM_IN_POINTS);
+	public static float mmToPt(final float mm) {
+		return (float) Math.floor(mm * MM_IN_POINTS);
 	}
 
 	/**
@@ -386,5 +380,6 @@ public class WritableDocument implements Closeable {
 		return result;
 	}
 
-	private record ElementAndExpectedBoundingBox(BlockElement<?> element, Rectangle bbox) {}
+	private record ElementAndExpectedBoundingBox(BlockElement<?> element, Rectangle bbox) {
+	}
 }
