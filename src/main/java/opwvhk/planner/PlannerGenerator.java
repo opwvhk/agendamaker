@@ -1,14 +1,35 @@
 package opwvhk.planner;
 
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.exceptions.PdfException;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
-import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.*;
+import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Link;
+import com.itextpdf.layout.element.List;
+import com.itextpdf.layout.element.ListItem;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Tab;
+import com.itextpdf.layout.element.TabStop;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.properties.Leading;
+import com.itextpdf.layout.properties.ListNumberingType;
+import com.itextpdf.layout.properties.Property;
+import com.itextpdf.layout.properties.TabAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,22 +38,35 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.itextpdf.kernel.geom.PageSize.A4;
 import static com.itextpdf.layout.properties.TextAlignment.CENTER;
+import static com.itextpdf.layout.properties.TextAlignment.LEFT;
 import static com.itextpdf.layout.properties.TextAlignment.RIGHT;
 import static com.itextpdf.layout.properties.UnitValue.createPercentArray;
 import static com.itextpdf.layout.properties.VerticalAlignment.BOTTOM;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SUNDAY;
+import static java.time.Month.APRIL;
+import static java.time.Month.DECEMBER;
+import static java.time.Month.FEBRUARY;
+import static java.time.Month.JANUARY;
+import static java.time.Month.JULY;
+import static java.time.Month.JUNE;
+import static java.time.Month.MAY;
+import static java.time.Month.NOVEMBER;
+import static java.time.Month.OCTOBER;
+import static java.time.Month.SEPTEMBER;
 import static java.time.temporal.ChronoUnit.WEEKS;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -48,31 +82,49 @@ public class PlannerGenerator {
 
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
-			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2023 – 2024", 2, 3, 3,
-					java.util.List.of(
-							new DateTitle(LocalDate.of(2023, Month.SEPTEMBER, 4), ""),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 2), "Projectweek 1"),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 7), ""),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 23), "Herfstvakantie"),
-							new DateTitle(LocalDate.of(2023, Month.OCTOBER, 30), ""),
-							new DateTitle(LocalDate.of(2023, Month.DECEMBER, 25), "Kerstvakantie"),
-							new DateTitle(LocalDate.of(2024, Month.JANUARY, 8), ""),
-							new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 19), "Voorjaarsvakantie"),
-							new DateTitle(LocalDate.of(2024, Month.FEBRUARY, 26), ""),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 1), "2e Paasdag"),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 2), "Projectweek 2"),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 7), ""),
-							new DateTitle(LocalDate.of(2024, Month.APRIL, 22), "Meivakantie"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 6), ""),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 9), "Hemelvaart"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 10), "dag na Hemelvaart (vrij)"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 11), ""),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 20), "2e Pinksterdag"),
-							new DateTitle(LocalDate.of(2024, Month.MAY, 21), ""),
-							new DateTitle(LocalDate.of(2024, Month.JULY, 1), "Toetsweek"),
-							new DateTitle(LocalDate.of(2024, Month.JULY, 6), ""),
-							new DateTitle(LocalDate.of(2024, Month.JULY, 20), "Zomervakantie")
-					)
+			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
+					// 2, 0, 1, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
+					// EnumSet.noneOf(StaticPage.class),
+					2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
+					EnumSet.of(
+							StaticPage.EMERGENCY_PLAN,
+							StaticPage.SCHEDULE_AND_VACATIONS,
+							StaticPage.SURVIVE_FRESHMAN_YEAR,
+							StaticPage.PLANNING_HAND,
+							// PlannerDescription.StaticPage.SURVIVE_LEARNING,
+							StaticPage.USEFUL_STUFF,
+							StaticPage.STUDYING_TIPS,
+							StaticPage.PREREQUISITES_LEARNING,
+							StaticPage.PLANNING_INSTRUCTIONS,
+							StaticPage.PERSONAL_GOALS
+					),
+					// new DateTitle(LocalDate.of(2024, SEPTEMBER, 14), "Testing..."),
+					new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
+					new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
+					new DateTitle(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie"),
+					new DateTitle(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag"),
+					new DateTitle(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag"),
+					new DateTitle(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie"),
+					new DateTitle(LocalDate.of(2025, JANUARY, 6), ""),
+					new DateTitle(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie"),
+					// new DateTitle(LocalDate.of(2025, FEBRUARY, 22), "Voorjaarsvakantie"),
+					new DateTitle(LocalDate.of(2025, FEBRUARY, 24), ""),
+					new DateTitle(LocalDate.of(2025, APRIL, 19), "Meivakantie"),
+					new DateTitle(LocalDate.of(2025, APRIL, 21), "1e Paasdag"),
+					new DateTitle(LocalDate.of(2025, APRIL, 22), "2e Paasdag"),
+					new DateTitle(LocalDate.of(2025, APRIL, 23), "Meivakantie"),
+					new DateTitle(LocalDate.of(2025, APRIL, 27), "Koningsdag"),
+					new DateTitle(LocalDate.of(2025, APRIL, 28), "Meivakantie"),
+					new DateTitle(LocalDate.of(2025, MAY, 6), ""),
+					new DateTitle(LocalDate.of(2025, MAY, 29), "Hemelvaart"),
+					new DateTitle(LocalDate.of(2025, MAY, 30), "dag na Hemelvaart (vrij)"),
+					new DateTitle(LocalDate.of(2025, MAY, 31), ""),
+					new DateTitle(LocalDate.of(2025, JUNE, 8), "1e Pinksterdag"),
+					new DateTitle(LocalDate.of(2025, JUNE, 9), "2e Pinksterdag"),
+					new DateTitle(LocalDate.of(2025, JUNE, 10), ""),
+					new DateTitle(LocalDate.of(2025, JULY, 12), "Zomervakantie"),
+					new DateTitle(LocalDate.of(2025, JULY, 19), "Zomervakantie"),
+					new DateTitle(LocalDate.of(2024, SEPTEMBER, 2), "") // Order doesn't matter...
 			);
 			new PlannerGenerator(plannerDescription).generate(output);
 		}
@@ -101,38 +153,21 @@ public class PlannerGenerator {
 	public PlannerGenerator(PlannerDescription plannerDescription) {
 		java.util.List<DateTitle> dateTitles = new ArrayList<>(plannerDescription.dateTitles());
 
+		// Augment the list of date titles to ensure the first date is a Monday, and the last date is a Sunday.
+
 		NavigableMap<LocalDate, String> sortedDateTitles = plannerDescription.sortedDateTitles();
 		LocalDate startDate = sortedDateTitles.firstKey().with(TemporalAdjusters.previousOrSame(MONDAY));
 		if (!sortedDateTitles.containsKey(startDate)) {
 			dateTitles.add(new DateTitle(startDate, sortedDateTitles.firstEntry().getValue()));
 		}
 		LocalDate endDate = sortedDateTitles.lastKey().with(TemporalAdjusters.nextOrSame(SUNDAY));
+		if (!sortedDateTitles.containsKey(endDate)) {
+			dateTitles.add(new DateTitle(endDate, sortedDateTitles.lastEntry().getValue()));
+		}
 
-		/*
-		 * The pages:
-		 * * Note the number of (static) pages before the timetables
-		 * * Note the number of (static) after the timetables and before the planner
-		 */
-		int staticPagesBeforePlanner = 18;
-		/*
-		 * The total must be printable as a booklet, and must thus be a multiple of 4. Also, the week planing pages must start on an even numbered page to
-		 * ensure pages open with a full week in view. To achieve this, the number of timetable and mindmap pages is increased as necessary.
-		 */
-		int numberOfWeeks = (int) WEEKS.between(startDate, endDate.plusDays(1));
-		int pagesBeforePlanner = staticPagesBeforePlanner + plannerDescription.timeTablePages();
-		// The planner pages must start on a left-hand page for each week, so the number of preceding pages must be odd.
-		int extraTimetablePages = 1 - pagesBeforePlanner % 2;
-		int pagesToEnd = pagesBeforePlanner + extraTimetablePages + 2 * numberOfWeeks +
-				plannerDescription.notesPages() + plannerDescription.mindmapPages() + 1;
-		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are missing (0-3).
-		int extraMindmapPages = 3 - (pagesToEnd - 1) % 4;
-
-		// Increase the number of mindmap pages to ensure the total number of pages is a multiple of four.
-		// Also overwrite the start and end dated with their corrected versions: start on the last Monday on or before the earliest date, and end on the first
-		// Sunday on or after the last date.
-		this.plannerDescription = new PlannerDescription(plannerDescription.title(), plannerDescription.subtitle(),
-				plannerDescription.timeTablePages() + extraTimetablePages, plannerDescription.notesPages(),
-				plannerDescription.mindmapPages() + extraMindmapPages, dateTitles);
+		this.plannerDescription = new PlannerDescription(plannerDescription.title(), plannerDescription.subtitle(), plannerDescription.timeTablePages(),
+				plannerDescription.notesPages(), plannerDescription.mindmapPages(), plannerDescription.numClasses(), plannerDescription.classItemStructure(),
+				plannerDescription.staticPages(), dateTitles);
 	}
 
 	/**
@@ -158,38 +193,116 @@ public class PlannerGenerator {
 	 * @throws PdfException when the planner cannot be generated
 	 */
 	public void generate(WritableDocument document) throws IOException, PdfException {
-		//document.startNewPage(true);
-		addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle()); // 1 page
-		addEmergencyPlan(document); // 1 page
+		document.addEventHandler(PdfDocumentEvent.END_PAGE, event -> {
+			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+			document.draw(docEvent, (canvas, area) -> {
+				int pageNumber = docEvent.getDocument().getPageNumber(docEvent.getPage());
+				if (pageNumber == 1) {
+					return;
+				}
 
-		addClassSchedulesAndVacations(document); // 1 page
-		addHowToSurviveTheFreshmanYear(document); // 2 pages
+				int fontSize = 10;
+				float centerX = (area.getLeft() + area.getRight()) / 2;
+				float footerY = area.getBottom() - fontSize * 2.1f;
+				canvas.setFontSize(fontSize);
+				canvas.showTextAligned(String.valueOf(pageNumber), centerX, footerY, CENTER);
+			});
+		});
 
-		addPlanningHand(document); // 1 page
-		addHowToSurviveLearning(document); // 10 pages
-		addStudyingTips(document); // 1 page
-		//addPrerequisitesForLearning(document); // 2 pages
-		addTimeSpentTables(document, plannerDescription.timeTablePages());
+		if (plannerDescription.staticPages().isEmpty()) {
+			document.drawFullPage(drawFullPageImage("/page_front.jpg"));
+			document.startNewPage(false);
+			document.startNewPage(true);
+		} else {
+			addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle());
+		}
 
-		addPlanningInstructions(document); // 1 page
-		addPlanningWeeks(document, plannerDescription.sortedDateTitles());
+		if (plannerDescription.staticPages().contains(StaticPage.EMERGENCY_PLAN)) {
+			addEmergencyPlan(document);
+		}
+
+		if (plannerDescription.staticPages().contains(StaticPage.SCHEDULE_AND_VACATIONS)) {
+			addClassSchedulesAndVacations(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.SURVIVE_FRESHMAN_YEAR)) {
+			addHowToSurviveTheFreshmanYear(document);
+		}
+
+		if (plannerDescription.staticPages().contains(StaticPage.PLANNING_HAND)) {
+			addPlanningHand(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.SURVIVE_LEARNING)) {
+			addHowToSurviveLearning(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.USEFUL_STUFF)) {
+			addUsefulStuff(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.STUDYING_TIPS)) {
+			addStudyingTips(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.PREREQUISITES_LEARNING)) {
+			addPrerequisitesForLearning(document);
+		}
+
+		/*
+		 * The week planing pages must start on a left-hand page (i.e., an even numbered page) to ensure pages open with a full week in view.
+		 * Add an extra timetable page if necessary to achieve this.
+		 */
+		boolean addPlanningInstructions = plannerDescription.staticPages().contains(StaticPage.PLANNING_INSTRUCTIONS);
+		boolean addPersonalGoals = plannerDescription.staticPages().contains(StaticPage.PERSONAL_GOALS);
+		int pagesBeforePlanner = document.numberOfPagesWrittenTo() + plannerDescription.timeTablePages() +
+		                         (addPlanningInstructions ? 1 : 0) + (addPersonalGoals ? 1 : 0);
+		int extraTimetablePages = pagesBeforePlanner % 2;
+		addTimeSpentTables(document, plannerDescription.timeTablePages() + extraTimetablePages);
+
+		if (addPlanningInstructions) {
+			addPlanningInstructions(document); // 1 page
+		}
+
+		if (addPersonalGoals) {
+			addPersonalGoals(document); // 1 page
+		}
+
+		// No page numbers beyond this point.
+		document.removeEventHandlers(PdfDocumentEvent.END_PAGE);
+		document.startNewPage(true); // Needed because all pages have been flushed.
+
+		addPlanningWeeks(document, plannerDescription.numClasses(), plannerDescription.sortedDateTitles());
 
 		addNotesPages(document, plannerDescription.notesPages());
-		addMindMapPages(document, plannerDescription.mindmapPages());
 
-		// Blank back page
+		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are missing (0-3).
+		// The formula purposefully comes up two pages short to accommodate the back cover.
+		int extraMindmapPages = 3 - (document.numberOfPagesWrittenTo() + plannerDescription.mindmapPages() + 1) % 4;
+		addMindMapPages(document, plannerDescription.mindmapPages() + extraMindmapPages);
+
 		document.startNewPage(true);
-		/* Preferably not: adolescents tend to try and find out anything they can (great), but may pull pranks (not good)
-		Paragraph closingRemarks = document.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
-				//.setBorder(new SolidBorder(ColorConstants.RED, 1))
-				.setTextAlignment(RIGHT)
-				.add("Gemaakt naar ontwerp van de Huizermaat\n")
-				.add("met software van Oscar Westra van Holthe - Kind");
-		Rectangle pageArea = document.getEffectiveArea();
-		// Paragraphs are rendered full-width, and objects are anchored to the bottom-left corner.
-		// This also means that the bottom-left page corner has coordinates (0,0).
-		document.addInFlow(closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
-		*/
+		document.startNewPage(true);
+		if (plannerDescription.staticPages().isEmpty()) {
+			document.drawFullPage(drawFullPageImage("/page_back.jpg"));
+		} else {
+			// Nearly blank back page
+			Paragraph closingRemarks = document.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
+					.setTextAlignment(RIGHT)
+					.add("Gemaakt naar ontwerp van de Huizermaat");
+			Rectangle pageArea = document.getEffectiveArea();
+			document.addInFlow(closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
+		}
+	}
+
+	BiConsumer<Canvas, Rectangle> drawFullPageImage(String pageImageResource) {
+		ImageData imageData = ImageDataFactory.create(requireNonNull(getClass().getResource(pageImageResource)));
+		return (canvas, area) -> {
+			float overflowPerEdge = 10;
+			Rectangle pageSize = canvas.getPage().getPageSize();
+			float scaledWidth = pageSize.getWidth() + 2 * overflowPerEdge;
+			float scaledHeight = imageData.getHeight() * scaledWidth / imageData.getWidth();
+			float offsetY = pageSize.getHeight() - scaledHeight;
+			offsetY -= overflowPerEdge * Math.signum(offsetY);
+
+			Image image = new Image(imageData, -overflowPerEdge, offsetY, scaledWidth);
+			canvas.add(image);
+		};
 	}
 
 	private void addTitlePage(WritableDocument document, String title, String subtitle) {
@@ -238,43 +351,45 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Lestijden en vakanties\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
-				.add(italic("Lestijden klas 1\n\u00A0").setFontSize(14)).setTextAlignment(CENTER));
+				.add(italic("Lestijden Onderbouw\n\u00A0").setFontSize(14)).setTextAlignment(CENTER));
 
 		UnitValue[] columnWidths = createPercentArray(new float[]{50, 50});
 		Table table = new Table(columnWidths).setAutoLayout().setHorizontalAlignment(HorizontalAlignment.CENTER)
 				.setPadding(0).setMargin(0).setMarginBottom(16);
 		for (String cellText : java.util.List.of(
 				"Normaal rooster", "Verkort rooster",
-				"1. 08:15-09:15", "1. 08:15- 08:55",
-				"2. 09:15-10:15", "2. 08:55- 09:35",
-				"pauze", "3. 09:35-10:15",
-				"3. 10:30-11:30", "pauze",
-				"4. 11:30-12:30", "4. 10:35-11:15",
-				"pauze", "5. 11:15-11:55",
-				"5. 13:00-14:00", "6. 11:55-12:35",
-				"6. 14:00-15:00", "7. 12:35-13:15"
+				"1. 08:15 - 09:15", "1. 08:15 - 08:55",
+				"2. 09:15 - 10:15", "2. 08:55 - 09:35",
+				"pauze", /*       */"pauze",
+				"3. 10:30 - 11:30", "3. 09:55 - 10:35",
+				"4. 11:30 - 12:30", "4. 10:35 - 11:15",
+				"pauze", /*       */"pauze",
+				"5. 13:00 - 14:00", "5. 11:35 - 12:15",
+				"6. 14:00 - 15:00", "6. 12:15 - 12:55",
+				"pauze", /*       */"7. 12:55 - 13:35",
+				"7. 15:15 - 16:15", "8. 13:35 - 14:15"
+
 		)) {
 			table.addCell(createCell(document, 1, cellText).setPadding(mmToPt(2)));
 		}
 		document.addInFlow(table);
 
 		document.addInFlow(document.createParagraph()
-				.add(bold("\nVakanties en lesvrije dagen:\n").setFontSize(16)).setTextAlignment(CENTER));
+				.add(bold("\nVakanties en lesvrije dagen\n").setFontSize(16)).setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
-				.add(italic("2023 – 2024\n\n").setFontSize(14)).setTextAlignment(CENTER));
+				.add(italic("2024 – 2025\n\n").setFontSize(14)).setTextAlignment(CENTER));
 
 		table = new Table(createPercentArray(new float[]{4.75f, 9.25f})).setAutoLayout()//.setFixedLayout()
 				.setHorizontalAlignment(HorizontalAlignment.CENTER)
 				.setPadding(0).setMargin(0).setMarginBottom(16);
 		for (String cellText : java.util.List.of(
-				"Herfstvakantie", "Maandag 23 oktober 2023 t/m vrijdag 27 oktober 2023",
-				"Kerstvakantie", "Maandag 25 december 2023 t/m vrijdag 5 januari 2024",
-				"Voorjaarsvakantie", "Maandag 19 februari 2024 t/m vrijdag 23 februari 2024",
-				"2e Paasdag", "Maandag 1 april 2024",
-				"Meivakantie", "Maandag 22 april 2024 t/m vrijdag 3 mei 2024",
-				"Hemelvaart", "Donderdag 9 mei en vrijdag 10 mei 2024",
-				"2e Pinksterdag", "Maandag 20 mei 2024",
-				"Zomervakantie", "Maandag 22 juli 2024 t/m zondag 1 september 2024"
+				"Herfstvakantie", "Zaterdag 26 oktober 2024 t/m zondag 3 november 2024",
+				"Kerstvakantie", "Zaterdag 21 december 2024 t/m zondag 5 januari 2025",
+				"Voorjaarsvakantie", "Zaterdag 15 februari 2025 t/m zondag 23 februari 2025",
+				"Meivakantie", "Zaterdag 19 april 2025 t/m maandag 5 mei 2025",
+				"Hemelvaart", "Donderdag 29 mei en vrijdag 30 mei 2025",
+				"2e Pinksterdag", "Maandag 9 juni 2025",
+				"Zomervakantie", "Zaterdag 12 juli 2025 t/m zondag 24 augustus 2025"
 		)) {
 			table.addCell(createCell(document, 1, cellText).setPadding(mmToPt(2)));
 		}
@@ -350,11 +465,11 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("\nHERHALEN, HERHALEN, HERHALEN")));
 		document.addInFlow(document.createParagraph()
 				.add("""
-						Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het allerbelangrijkste.
-						Wanneer je veel aandacht aan iets geeft, worden er verbindingen aangelegd in je hersenen, waardoor je
-						er steeds beter in wordt! In de eerste 20 minuten na het leren, kan je al zo’n 40% vergeten. Dat is
-						bijna de helft! Herhalen zorgt ervoor dat je minder vergeet. Wanneer je dus veel aandacht aan iets
-						geeft door het te herhalen, word je er én""".replace("\n", " ") + " ")
+						     Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het allerbelangrijkste.
+						     Wanneer je veel aandacht aan iets geeft, worden er verbindingen aangelegd in je hersenen, waardoor je
+						     er steeds beter in wordt! In de eerste 20 minuten na het leren, kan je al zo’n 40% vergeten. Dat is
+						     bijna de helft! Herhalen zorgt ervoor dat je minder vergeet. Wanneer je dus veel aandacht aan iets
+						     geeft door het te herhalen, word je er én""".replace("\n", " ") + " ")
 				.add(italic("beter"))
 				.add(" in én ")
 				.add(italic("onthoudt"))
@@ -371,7 +486,7 @@ public class PlannerGenerator {
 		);
 
 		document.addInFlow(document.createParagraph()
-				.add(bold("\n\nEn dan kun je nu aan de slag, succes!")).setTextAlignment(CENTER));
+				.add(bold("\nEn dan kun je nu aan de slag, succes!")).setTextAlignment(CENTER));
 	}
 
 	private void addPlanningInstructions(WritableDocument document) throws IOException {
@@ -382,37 +497,41 @@ public class PlannerGenerator {
 				.add("\n\n"));
 		document.addInFlow(document.createParagraph()
 				.add("""
-						In deze agenda kun je voor jezelf overzicht creëren in wat wanneer af moet zijn,
-						maar ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!
+						In deze agenda kun je voor jezelf een overzicht creëren van je moet doen, wanneer het af moet zijn,
+						en ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!
 						""".replace("\n", " ")));
 		document.addInFlow(document.createParagraph()
-				.add("""
-						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal stappen om je agenda in te vullen.
-						Deze stappen zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom maar goed door.
-						""".replace("\n", " ").strip())
+				.add("Hieronder staan de stappen voor het maken en uitvoeren van een planning. ")
+				.add("Deze stappen zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom goed door.")
 				.add("\n\n"));
 
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nStappenplan voor het maken van een planning:").setFontSize(16))
 				.add("\n\n"));
 
-		Image checkedCircleImage = document.loadSvgImageResource("/circle-checked.svg").setWidth(15).setHeight(15);
+		Image checkedCircleImage = document.loadSvgImageResource("/circle-checked.svg").setWidth(10).setHeight(10);
 
 		List list = document.createList().setListSymbol(ListNumberingType.DECIMAL);
 		list.setPostSymbolText(") ");
 		list.add("Noteer toetsen en huiswerk in de planagenda.");
-		list.add("Geef toetsen en inlevermomenten een kleurtje (rood of roze).");
-		list.add("Huiswerk dat af is kleur je groen.");
-		ListItem listItem = new ListItem();
-		listItem.add(document.createParagraph().add("De taken die af zijn, vink je af met een check ").add(checkedCircleImage).add("."));
-		list.add(listItem);
-		list.add("Bekijk SOM een paar weken vooruit. Zo weet je of je binnenkort een toets hebt.");
-		list.add("Houd rekening met afspraken buiten school. Op dagen met veel afspraken kun je minder huiswerk maken.");
-		list.add("Plan je huiswerk en toetsen in. Hak het in kleine stukjes.");
 		list.add("Weet je niet wat het huiswerk of leerwerk is? Check de studiewijzer!");
+		list.add("Geef toetsen en inlevermomenten een kleurtje (rood, roze, of geel).");
+		list.add("Bekijk SOM een week vooruit. Zo weet je of je binnenkort een toets hebt.");
+		list.add("Houd rekening met afspraken buiten school. Check hiervoor je tijdschema op blz. 18-20.\n" +
+		         "Op dagen met veel afspraken kun je minder huiswerk maken.");
+		list.add("Plan je huiswerk en toetsen in. Hak het in kleine stukjes (taken).");
 		list.add("Dan ga je aan de slag! Nummer de taken. Begin bij de belangrijkste taak.");
-		list.add("Heb je het aan het eind van de dag nog niet alles af gekregen? Plan deze taken opnieuw in.");
+		ListItem listItem = new ListItem();
+		listItem.add(document.createParagraph().add("Taken die af zijn, vink je af met een check ").add(checkedCircleImage).add("."));
+		list.add(listItem);
+		list.add("Heb je het aan het eind van de dag nog niet alles af? Plan deze taken opnieuw in.");
 		document.addInFlow(list);
+	}
+
+	private void addPersonalGoals(WritableDocument document) {
+		LOGGER.debug("Adding personal goals page");
+		BiConsumer<Integer, Paragraph> titleConsumer = (i, par) -> par.add(bold("Wat zijn je doelen voor de komende periode?\n\n\n").setFontSize(16));
+		addLinesPagesWithTitle(document, 1, titleConsumer);
 	}
 
 	private void addPlanningHand(WritableDocument document) throws IOException {
@@ -428,29 +547,29 @@ public class PlannerGenerator {
 		);
 
 		Rectangle pageArea = document.getEffectiveArea();
-		Image handImage = document.loadSvgImageResource("/hand.svg");
+		Image handImage = new Image(document.loadPdfPageAsObject("/hand.pdf", 1));
 		handImage.scaleToFit(pageArea.getWidth() / PHI, pageArea.getHeight() / PHI);
 		// centered on the page, but then moved down 20mm
-		float x = pageArea.getX() + (pageArea.getWidth() - handImage.getImageScaledWidth()) / 2f;
+		float x = pageArea.getX() + (pageArea.getWidth() - handImage.getImageScaledWidth()) / 2f - mmToPt(25);
 		float y = pageArea.getY() + (pageArea.getHeight() - handImage.getImageScaledHeight()) / 2f - mmToPt(10);
 		handImage.setFixedPosition(x, y);
 		document.addInFlow(handImage);
 
 		document.addInFlow(document.createParagraph(14)
 				.add("Wat moet ik doen?")
-				.setFixedPosition(mmToPt(40), mmToPt(143), mmToPt(50)));
+				.setFixedPosition(x - mmToPt(1), y + mmToPt(63), mmToPt(25)));
 		document.addInFlow(document.createParagraph(14)
-				.add("Waarom moet ik dat doen? Wat kan ik ervan leren?")
-				.setFixedPosition(mmToPt(30), mmToPt(180), mmToPt(60)));
+				.add("Waarom moet ik dat doen?\nWat kan ik ervan leren?")
+				.setFixedPosition(x + mmToPt(10), y + mmToPt(110), mmToPt(35)));
 		document.addInFlow(document.createParagraph(14)
 				.add("Wanneer moet het af zijn?")
-				.setFixedPosition(mmToPt(100), mmToPt(195), mmToPt(40)));
+				.setFixedPosition(x + mmToPt(55), y + mmToPt(120), mmToPt(40)));
 		document.addInFlow(document.createParagraph(14)
 				.add("Wat heb ik nodig?")
-				.setFixedPosition(mmToPt(130), mmToPt(184), mmToPt(50)));
+				.setFixedPosition(x + mmToPt(75), y + mmToPt(108), mmToPt(50)));
 		document.addInFlow(document.createParagraph(14)
 				.add("Wanneer ben ik klaar? Wanneer ben ik tevreden?")
-				.setFixedPosition(mmToPt(145), mmToPt(162), mmToPt(60)));
+				.setFixedPosition(x + mmToPt(90), y + mmToPt(85), mmToPt(60)));
 	}
 
 	private void addHowToSurviveLearning(WritableDocument document) {
@@ -475,8 +594,75 @@ public class PlannerGenerator {
 
 		for (int i = 0; i < 9; i++) {
 			document.startNewPage(false);
-			document.addInFlow(document.createParagraph().add(" "));
+			document.addInFlow(document.createParagraph().add("\u00A0"));
 		}
+	}
+
+	private void addUsefulStuff(WritableDocument document) {
+		LOGGER.debug("Adding useful abbreviations and links");
+		document.startNewPage(false);
+		document.addInFlow(document.createParagraph()
+				.add(bold("\nHandige afkortingen").setFontSize(16))
+				.add("\n\n"));
+
+		Table table1 = new Table(2).setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
+		table1.addHeaderCell(createCell0(document, "Vak")).addHeaderCell(createCell0(document, "Afkorting"));
+		for (String cellText : java.util.List.of(
+				"Nederlands", "Nl",
+				"Engels", "En",
+				"Frans", "Fr",
+				"Duits", "Du",
+				"Wiskunde", "Wi",
+				"Science", "Sc",
+				"Osa", "Os",
+				"Handvaardigheid", "Hv",
+				"Tekenen", "Te",
+				"Lichamelijke Opvoeding\u00A0\u00A0\u00A0", "LO",
+				"Muziek", "Mu"
+		)) {
+			table1.addCell(createCell0(document, cellText));
+		}
+
+		document.addInFlow(table1);//.addInFlow(document.createParagraph().add("\u00A0"));
+		document.addInFlow(document.createParagraph()
+				.add(bold("\nHuiswerk Noteren").setFontSize(16))
+				.add("\n\n"));
+
+		Table table2 = new Table(createPercentArray(new float[]{3, 2})).setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
+		table2.addHeaderCell(createCell0(document, "Wat")).addHeaderCell(createCell0(document, "Afkorting"));
+		for (String cellText : java.util.List.of(
+				"Maken", "M",
+				"Leren", "Lr",
+				"Lezen", "Lz",
+				"Toets", "T",
+				"Schriftelijke Overhoring", "SO",
+				"Praktische Opdracht", "PO",
+				"Paragraaf", "§"
+		)) {
+			table2.addCell(createCell0(document, cellText));
+		}
+		document.addInFlow(table2);//.addInFlow(document.createParagraph().add("\u00A0"));
+
+		document.addInFlow(document.createParagraph()
+				.add(bold("\nHandige Sites").setFontSize(16))
+				.add("\n\n"));
+
+		Table table3 = new Table(createPercentArray(new float[]{2, 3}))
+				.useAllAvailableWidth().setFixedLayout()
+				.setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
+		table3.addHeaderCell(createCell(document, "Website")).addHeaderCell(createCell(document, "Inloggegevens"));
+		java.util.List.of(
+				Map.entry("SomToday (agenda)", "https://inloggen.somtoday.nl/"),
+				Map.entry("Zermelo (rooster)", "https://hzm-gsf.zportal.nl/"),
+				Map.entry("Schoolmail", "https://mail.google.com/")
+		).forEach(entry ->
+				table3.addCell(createCell(document, 1, LEFT,
+						p -> p.add(entry.getKey() + "\n").add(new Link(entry.getValue(), PdfAction.createURI(entry.getValue())))
+				)).addCell(emptyCell(document)));
+		for (int i = 0; i < 4; i++) {
+			table3.addCell(createCell(document, "\n\u00A0")).addCell(emptyCell(document));
+		}
+		document.addInFlow(table3);
 	}
 
 	private void addStudyingTips(WritableDocument document) {
@@ -517,7 +703,7 @@ public class PlannerGenerator {
 				.add(bold("Hoe overleef ik de brugklas\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
 
 		// First heading: do not start with a newline (for the rest: do)
-		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik te laat komt?")));
+		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik te laat kom?")));
 		document.addInFlow(document.createParagraph().add("""
 				Als je te laat op school bent of te laat voor een les, haal je altijd eerst een telaatbriefje bij de conciërges. Met zo'n
 				briefje mag jij de les in, of je nu geoorloofd te laat was of niet.
@@ -526,7 +712,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik naar de orthodontist/dokter moet?")));
 		document.addInFlow(document.createParagraph().add("""
 				Je ouders moeten voor de afspraak aan school laten weten welk lesuur je er niet bent.
-				Dat kan door te bellen. Of ze geven je een briefje voor de conciërges mee met daarin waarom je welk lesuur niet aanwezig kunt zijn.
+				Dat kan door te bellen, of ze geven je een briefje voor de conciërges mee met daarin waarom je welk lesuur niet aanwezig kunt zijn.
 				Dat briefje moet je dan voor de afspraak aan een van de conciërges geven.
 				""".replace("\n", " ")));
 
@@ -537,7 +723,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik ziek naar huis wil?")));
 		document.addInFlow(document.createParagraph().add("""
 				Wanneer je je tijdens lestijd opeens niet lekker voelt, dan ga je naar je docent en geef je aan dat je naar huis wilt,
-				je meld je daarna af bij de conciërges.
+				je meldt je daarna af bij de conciërges.
 				Als je thuis bent, laat je je ouders naar school bellen dat je weer veilig thuis bent.
 				""".replace("\n", " ")));
 
@@ -545,13 +731,12 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add("""
 				Je geeft bij je vakdocent aan dat je een toets gemist hebt en vraagt de vakdocent wanneer je de toets kunt inhalen.
 				Je vakdocent zorgt dat er een inhaaltoets voor je klaar ligt in de mediatheek.
-				Elke dinsdagmiddag tussen 14:15-15:15 is er een moment om toetsen in te halen.
 				""".replace("\n", " ")));
 
 		document.addInFlow(document.createParagraph().add(bold("\nNeem ik mijn jas en gymtas mee naar het lokaal?")));
 		document.addInFlow(document.createParagraph().add("""
 				Op Huizermaat heeft elke leerling een eigen kluisje. Hierin kun je je gymtas, je jas en je telefoon bewaren.
-				Tijdens de gymles bewaar je je chromebook in je kluisje.
+				Tijdens de gymles bewaar je je chromebook en je telefoon in je kluisje.
 				""".replace("\n", " ")));
 
 		document.addInFlow(document.createParagraph().add(bold("\nZijn alle gymlessen in de gymzalen van Huizermaat?")));
@@ -564,12 +749,12 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add("""
 				Ja, op Huizermaat gebruiken we een chromebook ter ondersteuning van het onderwijs; we gebruiken dus ook boeken.
 				Een chromebook lijkt op een laptop.
-				Vanaf de herfstvakantie zullen we ze in de lessen gaan gebruiken en moet je dus altijd een opgeladen chromebook bij je hebben.
+				Vanaf de projectweek zullen we ze in de lessen gaan gebruiken en moet je dus altijd een opgeladen chromebook bij je hebben.
 				""".replace("\n", " ")));
 
 		document.addInFlow(document.createParagraph().add(bold("\nMag je je telefoon gebruiken tijdens de les?")));
 		document.addInFlow(document.createParagraph().add("""
-				Nee, tijdens de lessen bewaar je je telefoon, terwijl die uit is, in je tas of in je kluis.
+				Nee, tijdens de lessen bewaar je je telefoon, terwijl die uit is, in je kluis.
 				Een telefoon leidt immers veel te veel af van wat er tijdens de les gebeurt.
 				Als je internet nodig hebt voor een schoolopdracht, gebruik je je chromebook.
 				""".replace("\n", " ")));
@@ -578,10 +763,9 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add("""
 				We geven huiswerk omdat je dan nog eens rustig kunt oefenen met de stof die in de les is behandeld.
 				Of je maakt juist huiswerk om je voor te bereiden op de les die komen gaat.
-				We bouwen het rustig op. Na de herfstvakantie moet je rekenen op één à anderhalf uur per dag.
+				We bouwen het rustig op. Na de herfstvakantie moet je rekenen op één à anderhalf uur per dag (ook in het weekend).
 				Als je goed meedoet tijdens de les, scheelt dat in wat je thuis moet doen. Op school kun je bovendien de docent of
 				medeleerlingen om hulp vragen. Het is vooral handig om leerwerk rustig thuis te doen.
-				Ook tijdens het weekend moet je vaak iets voor school doen.
 				""".replace("\n", " ")));
 
 		document.addInFlow(document.createParagraph().add(bold("\nWat zijn de afspraken in de leszone?")));
@@ -589,10 +773,10 @@ public class PlannerGenerator {
 				Zodra je door de klapdeuren een leszone in loopt, gelden de volgende afspraken:
 				""".replace("\n", " ")));
 		List learningZoneRules = document.createList().setListSymbol("- ");
-		learningZoneRules.add("Je praat zachtjes en loopt rustig");
-		learningZoneRules.add("Je hebt geen jas aan (deze ligt al in je kluis)");
-		learningZoneRules.add("Je hebt je telefoon niet bij je (deze ligt al in je kluis)");
-		learningZoneRules.add("Eten en drinken is niet toegestaan in de leszone (wel daarbuiten)");
+		learningZoneRules.add("Je praat zachtjes en loopt rustig.");
+		learningZoneRules.add("Je hebt geen jas aan (deze ligt al in je kluis).");
+		learningZoneRules.add("Je hebt je telefoon niet bij je (deze ligt al in je kluis).");
+		learningZoneRules.add("Eten en drinken is niet toegestaan in de leszone (wel daarbuiten).");
 		document.addInFlow(learningZoneRules);
 	}
 
@@ -625,18 +809,33 @@ public class PlannerGenerator {
 		document.addInFlow(table);
 	}
 
-	private void addPlanningWeeks(WritableDocument document, NavigableMap<LocalDate, String> dateTitles)
+	private void addPlanningWeeks(WritableDocument document, int numClassSlots, NavigableMap<LocalDate, String> dateTitles)
 			throws IOException {
 		LOGGER.debug("Adding planning weeks");
 
 		Image emptyCircleImage = document.loadSvgImageResource("/circle-empty.svg").setWidth(15).setHeight(15);
 		UnitValue[] columnWidths = createPercentArray(3);
+		// numClassSlots is also used for planning slots on Saturday
+		int numPlanningSlots = 13 - numClassSlots;
+		if (numClassSlots < 3) {
+			throw new IllegalArgumentException("numClassSlots must at least be 3");
+		}
+		if (numPlanningSlots < 3) {
+			throw new IllegalArgumentException("numPlanningSlots must at least be 3");
+		}
+
 		LocalDate lastDateThatMustBePresent = dateTitles.lastKey();
 		for (LocalDate monday = dateTitles.firstKey(); !monday.isAfter(lastDateThatMustBePresent); monday = monday.plusWeeks(1)) {
-			int numClassSlots = 7; // This is also used for planning slots on Saturday
-			int numPlanningSlots = 6;
 			int extraPadding = 9;
 			LOGGER.debug("Adding planning week starting on {}", monday);
+
+			ClassItemStructure classItemStructure = plannerDescription.classItemStructure();
+			int numberOfWeeks = (int) WEEKS.between(dateTitles.firstKey(), monday);
+			if (classItemStructure == null) {
+				ClassItemStructure[] choices = new ClassItemStructure[]{ClassItemStructure.CLASS_ROOM_SINGLE, ClassItemStructure.CLASS_ROOM_DOUBLE,
+						ClassItemStructure.CLASS_ROOM_TRIPLE};
+				classItemStructure = choices[(numberOfWeeks % choices.length)];
+			}
 
 			// Left page: Monday to Wednesday
 
@@ -662,9 +861,9 @@ public class PlannerGenerator {
 				table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(c)));
 			}
 			for (int r = 0; r < numClassSlots; r++) {
-				table.addCell(createCell(document, 1, (r + 1) + "\n\n\u00A0").setPaddingBottom(extraPadding));
-				table.addCell(createCell(document, 1, (r + 1) + "\n\n\u00A0").setPaddingBottom(extraPadding));
-				table.addCell(createCell(document, 1, (r + 1) + "\n\n\u00A0").setPaddingBottom(extraPadding));
+				table.addCell(getCreateClassCell(document, 1, extraPadding, classItemStructure, r + 1));
+				table.addCell(getCreateClassCell(document, 1, extraPadding, classItemStructure, r + 1));
+				table.addCell(getCreateClassCell(document, 1, extraPadding, classItemStructure, r + 1));
 			}
 			for (int c = 0; c < 3; c++) {
 				table.addCell(createCell(document, 1, "Planning"));
@@ -677,7 +876,7 @@ public class PlannerGenerator {
 			// Right page: Thursday to Sunday
 
 			document.startNewPage(false);
-			//document.addInFlow(document.createParagraph().add("\n"));
+			// document.addInFlow(document.createParagraph().add("\n"));
 
 			table = new Table(columnWidths).useAllAvailableWidth().setPadding(0).setMargin(0).setMarginBottom(16).setFixedLayout();
 			for (int c = 0; c < 3; c++) {
@@ -685,17 +884,20 @@ public class PlannerGenerator {
 				table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(c + 3)));
 			}
 			for (int r = 0; r < numClassSlots; r++) {
-				table.addCell(createCell(document, 2, (r + 1) + "\n\n\u00A0").setPaddingBottom(extraPadding));
-				table.addCell(createCell(document, 2, (r + 1) + "\n\n\u00A0").setPaddingBottom(extraPadding));
+				table.addCell(getCreateClassCell(document, 2, extraPadding, classItemStructure, r + 1));
+				table.addCell(getCreateClassCell(document, 2, extraPadding, classItemStructure, r + 1));
+				// These planning cells are less high than the others, but will grow to the same size as the numbered cells.
+				// The other two sets of planning sets must create their own height correctly.
 				if (r == 0) {
 					table.addCell(createCell(document, 1, "Planning"));
-					table.addCell(createCell(document, 1, RIGHT, p -> p.add("\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 1, RIGHT, p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				} else {
-					table.addCell(createCell(document, 2, RIGHT, p -> p.add("\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 2, RIGHT, p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				}
 			}
 			table.addCell(createCell(document, 1, "Planning"));
 			table.addCell(createCell(document, 1, "Planning"));
+			// Sunday
 			table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(6)));
 			for (int r = 0; r < numPlanningSlots; r++) {
 				table.addCell(createCell(document, 2, RIGHT, p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
@@ -709,6 +911,40 @@ public class PlannerGenerator {
 			}
 			document.addInFlow(table);
 		}
+	}
+
+	private Cell getCreateClassCell(WritableDocument document, int rowspan, int extraPadding, ClassItemStructure classItemStructure, int classHour) {
+		float extraPadding1 = extraPadding + 22f;
+		float extraPadding2 = ((extraPadding + 11f) / 2f) - 0.5f;
+		float extraPadding3 = (extraPadding / 3f) - 1f;
+		float extraPadding4 = extraPadding3 - 0.577f;
+		if (classItemStructure == ClassItemStructure.SINGLE_FIELD) {
+			return createCell(document, rowspan, classHour + "\n\n\u00A0").setPaddingBottom(extraPadding);
+		}
+		Table t = new Table(createPercentArray(new float[]{1, 3})).useAllAvailableWidth().setFixedLayout().setPadding(0).setMargin(0)
+				.setBorder(Border.NO_BORDER);
+		switch (classItemStructure) {
+			case CLASS_ROOM_SINGLE -> {
+				t.addCell(b(6, createCell(document, 1, classHour + "\u00A0").setPaddingBottom(extraPadding2)));
+				t.addCell(b(1, createCell(document, 2, "\u00A0").setPaddingBottom(extraPadding1)));
+				t.addCell(b(12, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding2)));
+			}
+			case CLASS_ROOM_DOUBLE -> {
+				t.addCell(b(6, createCell(document, 1, classHour + "\u00A0").setPaddingBottom(extraPadding2)));
+				t.addCell(b(3, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding2)));
+				t.addCell(b(12, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding2)));
+				t.addCell(b(9, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding2)));
+			}
+			case CLASS_ROOM_TRIPLE -> {
+				t.addCell(b(6, createCell(document, 1, classHour + "\u00A0").setPaddingBottom(extraPadding3)));
+				t.addCell(b(3, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding3)));
+				t.addCell(b(14, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding4)));
+				t.addCell(b(11, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding4)));
+				t.addCell(b(12, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding4)));
+				t.addCell(b(9, createCell(document, 1, "\u00A0").setPaddingBottom(extraPadding4)));
+			}
+		}
+		return new Cell(rowspan, 1).setMargin(0).setPadding(0).add(t);
 	}
 
 	private Cell createDateCellWithText(WritableDocument document, NavigableMap<LocalDate, String> dateTitles, float columnWidth, LocalDate date) {
@@ -732,18 +968,55 @@ public class PlannerGenerator {
 		return createCell(document, 1, null);
 	}
 
+	private Cell createCell(WritableDocument document, String text) {
+		return createCell(document, 1, text);
+	}
+
 	private Cell createCell(WritableDocument document, int rowspan, String text) {
 		return createCell(document, rowspan, TextAlignment.LEFT, paragraph -> paragraph.add(requireNonNullElse(text, "\u00A0")));
+	}
+
+	private Cell createCell0(WritableDocument document, String text) {
+		return createCell(document, 1, text).setBorder(Border.NO_BORDER);
 	}
 
 	private Cell createCell(WritableDocument document, int rowspan, TextAlignment alignment, Consumer<Paragraph> paragraphConsumer) {
 		Paragraph paragraph = document.createParagraph(10.5f).setMargin(0).setMultipliedLeading(1);
 		paragraphConsumer.accept(paragraph);
-		return new Cell(rowspan, 1).setTextAlignment(requireNonNull(alignment)).add(paragraph);
+		Cell cell = new Cell(rowspan, 1).setMargin(0);
+		return cell.setTextAlignment(requireNonNull(alignment)).add(paragraph);
+	}
+
+	/**
+	 * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell border.
+	 * The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left borders respectively.
+	 */
+	private Cell b(int nibble, Cell element) {
+		if ((nibble & 0b00001000) == 0) {
+			element.setBorderTop(Border.NO_BORDER);
+		}
+		if ((nibble & 0b00000100) == 0) {
+			element.setBorderRight(Border.NO_BORDER);
+		}
+		if ((nibble & 0b00000010) == 0) {
+			element.setBorderBottom(Border.NO_BORDER);
+		}
+		if ((nibble & 0b00000001) == 0) {
+			element.setBorderLeft(Border.NO_BORDER);
+		}
+		return element;
 	}
 
 	private void addNotesPages(WritableDocument document, int numberOfNotesPages) {
 		LOGGER.debug("Adding {} notes pages", numberOfNotesPages);
+		BiConsumer<Integer, Paragraph> titleConsumer = (i, par) -> {
+			String header = i == 0 ? "\nRUIMTE VOOR AANTEKENINGEN\n\n\n" : "\n\n\n\n";
+			par.add(header).setTextAlignment(CENTER);
+		};
+		addLinesPagesWithTitle(document, numberOfNotesPages, titleConsumer);
+	}
+
+	private static void addLinesPagesWithTitle(WritableDocument document, int numberOfNotesPages, BiConsumer<Integer, Paragraph> titleConsumer) {
 		float pageWidth = document.getEffectiveArea().getWidth();
 		Paragraph blockWithLines = document.createParagraph(null, 14)
 				.addTabStops(new TabStop(pageWidth, TabAlignment.LEFT, new SolidLine(.75f)))
@@ -751,8 +1024,9 @@ public class PlannerGenerator {
 				.add(new Tab()).add("\n").add(new Tab()).add("\n").add(new Tab()).add("\n").add("\n");
 		for (int i = 0; i < numberOfNotesPages; i++) {
 			document.startNewPage(false);
-			String header = i == 0 ? "\nRUIMTE VOOR AANTEKENINGEN\n\n\n" : "\n\n\n\n";
-			document.addInFlow(document.createParagraph().add(header).setTextAlignment(CENTER));
+			Paragraph paragraph = document.createParagraph();
+			titleConsumer.accept(i, paragraph);
+			document.addInFlow(paragraph);
 			document.addInFlow(blockWithLines).addInFlow(blockWithLines).addInFlow(blockWithLines).addInFlow(blockWithLines);
 		}
 	}
@@ -763,13 +1037,10 @@ public class PlannerGenerator {
 			document.startNewPage(false);
 			String header = i == 0 ? "\nRUIMTE VOOR MINDMAPS\n\n\n" : "\n\n\n\n";
 			document.addInFlow(document.createParagraph().add(header).setTextAlignment(CENTER));
-			document.draw((canvas, area) -> {
-				canvas.setLineWidth(0.5f).setColor(ColorConstants.BLACK, true)
-						//.rectangle(pageArea.applyMargins(2, 2, 2, 2, false))
-						.rectangle(area)
-						.stroke();
-				//canvas.
-			});
+			document.draw((canvas, area) -> canvas.getPdfCanvas()
+					.setLineWidth(0.5f).setColor(ColorConstants.BLACK, false)
+					.rectangle(document.getEffectiveArea())
+					.stroke());
 		}
 	}
 }

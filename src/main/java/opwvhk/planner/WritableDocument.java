@@ -1,22 +1,36 @@
 package opwvhk.planner;
 
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.events.Event;
+import com.itextpdf.kernel.events.IEventHandler;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDictionary;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfName;
 import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
+import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.BlockElement;
+import com.itextpdf.layout.element.IBlockElement;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.List;
+import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.layout.LayoutArea;
 import com.itextpdf.layout.layout.LayoutContext;
 import com.itextpdf.layout.layout.LayoutResult;
-import com.itextpdf.layout.properties.*;
+import com.itextpdf.layout.properties.FontKerning;
+import com.itextpdf.layout.properties.Leading;
+import com.itextpdf.layout.properties.Property;
+import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.renderer.IRenderer;
 import com.itextpdf.svg.converter.SvgConverter;
 
@@ -53,7 +67,6 @@ public class WritableDocument implements Closeable {
 	private final PdfFont font;
 	private final float fontSize;
 
-	private BiConsumer<Integer, Document> newPageHandler;
 	private boolean pageIsEmpty;
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
@@ -64,62 +77,21 @@ public class WritableDocument implements Closeable {
 		pdfDocument = new PdfDocument(pdfWriter);
 		pdfDocument.getCatalog().setPageLayout(PdfName.TwoColumnLeft);
 		pdfDocument.setDefaultPageSize(pageSize);
+		pdfDocument.addNewPage(); // We'll output at least one page.
+
 		document = new Document(pdfDocument).setFont(font).setFontSize(fontSize).setFontKerning(FontKerning.YES);
 		document.setProperty(Property.LEADING, new Leading(Leading.FIXED, DEFAULT_LINE_SPACING * fontSize));
 
-		newPageHandler = (ignored1, ignored2) -> {};
 		pageIsEmpty = true;
 	}
 
 	public WritableDocument(final PageSize pageSize, float innerMargin, float outerMargin, float topBottomMargin, final OutputStream output)
 			throws IOException {
 		this(pageSize, output);
-		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
-		withMargins(innerMargin, outerMargin, topBottomMargin);
-	}
-
-	public WritableDocument(final PageSize pageSize, final OutputStream output, final BiConsumer<Integer, Document> newPageHandler) throws IOException {
-		this(pageSize, output);
-		//noinspection resource: the method returns 'this', so a try-with-resources is not needed in a constructor
-		withNewPageHandler(newPageHandler);
-	}
-
-	/**
-	 * Start a new page in the document. Mirrors the left & right margins.
-	 */
-	public void startNewPage(boolean alsoStartNewPageIfLastOneIsEmpty) {
-		if (pdfDocument.getNumberOfPages() == 0) {
-			pdfDocument.addNewPage();
-		} else if (alsoStartNewPageIfLastOneIsEmpty || !pageIsEmpty) {
-			document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-		}
-		newPageHandler.accept(pdfDocument.getNumberOfPages(), document);
-	}
-
-	@Override
-	public void close() {
-		// Also closes pdfDocument and pdfWriter.
-		document.close();
-	}
-
-	public Image loadSvgImageResource(String resourceName) throws IOException {
-		try (InputStream stream = getClass().getResourceAsStream(resourceName)) {
-			return SvgConverter.convertToImage(requireNonNull(stream), pdfDocument);
-		}
-	}
-
-	public Rectangle getEffectiveArea() {
-		final PageSize pageSize;
-		if (pdfDocument.getNumberOfPages() == 0) {
-			pageSize = pdfDocument.getDefaultPageSize();
-		} else {
-			pageSize = new PageSize(pdfDocument.getLastPage().getPageSize());
-		}
-		return document.getPageEffectiveArea(pageSize);
-	}
-
-	public WritableDocument withMargins(float innerMargin, float outerMargin, float topBottomMargin) {
-		return withNewPageHandler((pageNumber, document) -> {
+		document.setMargins(topBottomMargin, outerMargin, topBottomMargin, innerMargin);
+		pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, event -> {
+			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+			int pageNumber = pdfDocument.getPageNumber(docEvent.getPage());
 			if (pageNumber % 2 == 0) {
 				document.setMargins(topBottomMargin, innerMargin, topBottomMargin, outerMargin);
 			} else {
@@ -128,24 +100,117 @@ public class WritableDocument implements Closeable {
 		});
 	}
 
-	public WritableDocument withNewPageHandler(BiConsumer<Integer, Document> newPageHandler) {
-		this.newPageHandler = requireNonNull(newPageHandler);
-		this.newPageHandler.accept(max(pdfDocument.getNumberOfPages(), 1), document);
+	public WritableDocument addEventHandler(String eventType, IEventHandler eventHandler) {
+		// Note: PDF events are not fired in sync with document manipulations, so removing event handlers is unreliable.
+		pdfDocument.addEventHandler(eventType, eventHandler);
 		return this;
 	}
 
-	public WritableDocument draw(BiConsumer<PdfCanvas, Rectangle> consumer) {
-		final PdfPage page = pdfDocument.getLastPage();
-		PdfCanvas pdfCanvas = new PdfCanvas(page);
-		Rectangle area = getEffectiveArea();
-		pdfCanvas.saveState();
-		try {
-			consumer.accept(pdfCanvas, area);
-		} finally {
-			pdfCanvas.restoreState();
+	public WritableDocument removeEventHandlers(String eventType) {
+		// Note: PDF events are not fired in sync with document manipulations, so flush first.
+
+		for (int i = 1; i <= pdfDocument.getNumberOfPages(); i++) {
+			pdfDocument.getPage(i).flush();
 		}
-		pageIsEmpty = false;
+		// noinspection EqualsWhichDoesntCheckParameterClass
+		pdfDocument.removeEventHandler(eventType, new IEventHandler() {
+			@Override
+			public void handleEvent(Event event) {
+				// Nothing to do
+			}
+
+			@Override
+			@SuppressWarnings("EqualsDoesntCheckParameterClass")
+			public boolean equals(Object obj) {
+				//noinspection Contract
+				return true;
+			}
+		});
+		pdfDocument.addNewPage(); // Ensure there's at least one next page.
 		return this;
+	}
+
+	@Override
+	public void close() {
+		// Also closes pdfDocument and pdfWriter.
+		document.close();
+	}
+
+	/**
+	 * Start a new page in the document. Mirrors the left & right margins.
+	 */
+	public void startNewPage(boolean alsoStartNewPageIfLastOneIsEmpty) {
+		if (alsoStartNewPageIfLastOneIsEmpty || !pageIsEmpty) {
+			document.add(new AreaBreak());//AreaBreakType.NEXT_PAGE));
+			pageIsEmpty = true;
+		}
+		if (pdfDocument.getNumberOfPages() == 0) {
+			PdfPage pdfPage = pdfDocument.addNewPage();
+		}
+	}
+
+	/**
+	 * Return the number of pages written to so far. This may or may not be the complete number of pages in the final document.
+	 *
+	 * @return the number of pages written to
+	 */
+	public int numberOfPagesWrittenTo() {
+		return pdfDocument.getNumberOfPages();
+	}
+
+	public Rectangle getEffectiveArea() {
+		final PageSize pageSize;
+		if (pdfDocument.getNumberOfPages() == 0) {
+			pageSize = pdfDocument.getDefaultPageSize();
+		} else {
+			PdfPage page = pdfDocument.getLastPage();
+			PdfDictionary pdfObject = page.getPdfObject();
+			if (pdfObject.containsKey(PdfName.MediaBox)) {
+				pageSize = new PageSize(page.getPageSize());
+			} else {
+				pageSize = pdfDocument.getDefaultPageSize();
+			}
+		}
+		return document.getPageEffectiveArea(pageSize);
+	}
+
+	public Image loadSvgImageResource(String resourceName) throws IOException {
+		try (InputStream stream = getClass().getResourceAsStream(resourceName)) {
+			return SvgConverter.convertToImage(requireNonNull(stream), pdfDocument);
+		}
+	}
+
+	public PdfFormXObject loadPdfPageAsObject(String resourceName, int pageNumber) throws IOException {
+		try (InputStream stream = getClass().getResourceAsStream(resourceName)) {
+			PdfDocument pdfResource = new PdfDocument(new PdfReader(requireNonNull(stream)));
+			PdfPage pageResource = pdfResource.getPage(pageNumber);
+			return pageResource.copyAsFormXObject(pdfDocument);
+		}
+	}
+
+	public WritableDocument drawFullPage(BiConsumer<Canvas, Rectangle> consumer) {
+		startNewPage(false);
+		drawOnPdfPage(pdfDocument.getLastPage(), consumer);
+
+		return this;
+	}
+
+	public WritableDocument draw(BiConsumer<Canvas, Rectangle> consumer) {
+		drawOnPdfPage(pdfDocument.getLastPage(), consumer);
+		return this;
+	}
+
+	public WritableDocument draw(PdfDocumentEvent event, BiConsumer<Canvas, Rectangle> consumer) {
+		drawOnPdfPage(event.getPage(), consumer);
+		return this;
+	}
+
+	protected void drawOnPdfPage(PdfPage page, BiConsumer<Canvas, Rectangle> consumer) {
+		try (Canvas canvas = new Canvas(page, page.getPageSize())) {
+			canvas.setFont(font).setFontSize(fontSize);
+			consumer.accept(canvas, getEffectiveArea());
+			pageIsEmpty = false;
+		}
 	}
 
 	public WritableDocument addInFlow(IBlockElement element) {
@@ -183,7 +248,8 @@ public class WritableDocument implements Closeable {
 	}
 
 	public <E extends BlockElement<E>> E createElement(PdfFont font, float fontSize, Supplier<E> creator) {
-		return creator.get().setPadding(0).setMargin(0).setMarginBottom(6).setFont(font == null ? this.font : font).setFontSize(fontSize < 0 ? this.fontSize : fontSize).setFontKerning(FontKerning.YES);
+		return creator.get().setPadding(0).setMargin(0).setMarginBottom(6).setFont(font == null ? this.font : font)
+				.setFontSize(fontSize < 0 ? this.fontSize : fontSize).setFontKerning(FontKerning.YES);
 	}
 
 	public List createList() {
@@ -218,7 +284,8 @@ public class WritableDocument implements Closeable {
 			final float width = pointValue(element.getWidth(), area.getWidth());
 			final Rectangle bbox = calculateBBox(element, area.clone().setWidth(width));
 			return new ElementAndExpectedBoundingBox(element, bbox);
-			//}).filter(boxed -> boxed.getBbox() != null && area.contains(boxed.getBbox())).findFirst().orElseThrow(); // Throw if no element meets the criteria
+			//}).filter(boxed -> boxed.getBbox() != null && area.contains(boxed.getBbox())).findFirst().orElseThrow(); // Throw if no element meets the
+			// criteria
 		}).filter(boxed -> boxed.bbox() != null).findFirst().orElseThrow(); // Throw if no element meets the criteria
 
 		return addBoxedElement(area, boxedElement);
@@ -240,7 +307,7 @@ public class WritableDocument implements Closeable {
 		final float bottom = bbox.getBottom() + strokeAndBorderWidth + pointValue(element.getPaddingBottom());
 		final float contentWidth = bbox.getWidth() - 2 * strokeAndBorderWidth - pointValue(element.getPaddingLeft()) - pointValue(element.getPaddingRight());
 		element.setFixedPosition(left, bottom, contentWidth);
-		//element.setHeight(bbox.getHeight());
+		// element.setHeight(bbox.getHeight());
 		final Rectangle remainingArea = area.clone().decreaseHeight(bbox.getHeight());
 
 		document.add(element);
