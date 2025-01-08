@@ -62,7 +62,7 @@ public class WritableDocument implements Closeable {
 	public static final float DEFAULT_FONT_SIZE = 11f;
 
 	private final PdfDocument pdfDocument;
-	private final Document document;
+	final Document document;
 
 	private final PdfFont font;
 	private final float fontSize;
@@ -155,6 +155,7 @@ public class WritableDocument implements Closeable {
 	 * @return the number of pages written to
 	 */
 	public int numberOfPagesWrittenTo() {
+		document.flush();
 		return pdfDocument.getNumberOfPages();
 	}
 
@@ -191,7 +192,6 @@ public class WritableDocument implements Closeable {
 	public WritableDocument drawFullPage(BiConsumer<Canvas, Rectangle> consumer) {
 		startNewPage(false);
 		drawOnPdfPage(pdfDocument.getLastPage(), consumer);
-
 		return this;
 	}
 

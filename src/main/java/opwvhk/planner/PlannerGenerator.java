@@ -23,6 +23,7 @@ import com.itextpdf.layout.element.Tab;
 import com.itextpdf.layout.element.TabStop;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.FloatPropertyValue;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.Leading;
 import com.itextpdf.layout.properties.ListNumberingType;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -71,6 +73,7 @@ import static java.time.temporal.ChronoUnit.WEEKS;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static opwvhk.planner.WritableDocument.mmToPt;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Class to generate a PDF file with one or more calendar weeks.
@@ -79,26 +82,27 @@ import static opwvhk.planner.WritableDocument.mmToPt;
  */
 public class PlannerGenerator {
 	private static final float PHI = 1.618033988749f;
+	private static final String LIST_SYMBOL_HYPHEN_BULLET = "⁃ ";
+	private static final String LIST_SYMBOL_BULLET = "• ";
 
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
 			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
-					// 2, 0, 1, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
-					// EnumSet.noneOf(StaticPage.class),
+					// 2, 0, 0, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
 					2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
 					EnumSet.of(
 							StaticPage.EMERGENCY_PLAN,
 							StaticPage.SCHEDULE_AND_VACATIONS,
 							StaticPage.SURVIVE_FRESHMAN_YEAR,
 							StaticPage.PLANNING_HAND,
-							// PlannerDescription.StaticPage.SURVIVE_LEARNING,
+							// StaticPage.SURVIVE_LEARNING,
 							StaticPage.USEFUL_STUFF,
 							StaticPage.STUDYING_TIPS,
+							StaticPage.HOW_TO_LEARN,
 							StaticPage.PREREQUISITES_LEARNING,
 							StaticPage.PLANNING_INSTRUCTIONS,
 							StaticPage.PERSONAL_GOALS
 					),
-					// new DateTitle(LocalDate.of(2024, SEPTEMBER, 14), "Testing..."),
 					new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
 					new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
 					new DateTitle(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie"),
@@ -106,8 +110,8 @@ public class PlannerGenerator {
 					new DateTitle(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag"),
 					new DateTitle(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie"),
 					new DateTitle(LocalDate.of(2025, JANUARY, 6), ""),
+					new DateTitle(LocalDate.of(2025, FEBRUARY, 6), ""),
 					new DateTitle(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie"),
-					// new DateTitle(LocalDate.of(2025, FEBRUARY, 22), "Voorjaarsvakantie"),
 					new DateTitle(LocalDate.of(2025, FEBRUARY, 24), ""),
 					new DateTitle(LocalDate.of(2025, APRIL, 19), "Meivakantie"),
 					new DateTitle(LocalDate.of(2025, APRIL, 21), "1e Paasdag"),
@@ -128,6 +132,7 @@ public class PlannerGenerator {
 			);
 			new PlannerGenerator(plannerDescription).generate(output);
 		}
+		// Desktop.getDesktop().open(new File("planner.pdf"));
 	}
 
 	/**
@@ -140,6 +145,7 @@ public class PlannerGenerator {
 	private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("MMMM", LOCALE);
 	private static final DateTimeFormatter WEEK_NR_FORMATTER = DateTimeFormatter.ofPattern("w", LOCALE);
 	private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE: d", LOCALE);
+	private static final DateTimeFormatter WEEKDAY_FORMAT = DateTimeFormatter.ofPattern("EEEE", LOCALE);
 	/**
 	 * The description of the planner to generate.
 	 */
@@ -165,8 +171,10 @@ public class PlannerGenerator {
 			dateTitles.add(new DateTitle(endDate, sortedDateTitles.lastEntry().getValue()));
 		}
 
-		this.plannerDescription = new PlannerDescription(plannerDescription.title(), plannerDescription.subtitle(), plannerDescription.timeTablePages(),
-				plannerDescription.notesPages(), plannerDescription.mindmapPages(), plannerDescription.numClasses(), plannerDescription.classItemStructure(),
+		this.plannerDescription = new PlannerDescription(plannerDescription.title(), plannerDescription.subtitle(),
+				plannerDescription.timeTablePages(),
+				plannerDescription.notesPages(), plannerDescription.mindmapPages(), plannerDescription.numClasses(),
+				plannerDescription.classItemStructure(),
 				plannerDescription.staticPages(), dateTitles);
 	}
 
@@ -240,19 +248,23 @@ public class PlannerGenerator {
 		if (plannerDescription.staticPages().contains(StaticPage.STUDYING_TIPS)) {
 			addStudyingTips(document);
 		}
+		if (plannerDescription.staticPages().contains(StaticPage.HOW_TO_LEARN)) {
+			addHowToLearn(document);
+		}
 		if (plannerDescription.staticPages().contains(StaticPage.PREREQUISITES_LEARNING)) {
 			addPrerequisitesForLearning(document);
 		}
 
 		/*
-		 * The week planing pages must start on a left-hand page (i.e., an even numbered page) to ensure pages open with a full week in view.
-		 * Add an extra timetable page if necessary to achieve this.
+		 * The week planing pages must start on a left-hand page (i.e., an even numbered page) to ensure pages open
+		 * with a full week in view. Add an extra timetable page if necessary to achieve this.
 		 */
 		boolean addPlanningInstructions = plannerDescription.staticPages().contains(StaticPage.PLANNING_INSTRUCTIONS);
 		boolean addPersonalGoals = plannerDescription.staticPages().contains(StaticPage.PERSONAL_GOALS);
-		int pagesBeforePlanner = document.numberOfPagesWrittenTo() + plannerDescription.timeTablePages() +
+		int numberOfPagesWrittenTo1 = document.numberOfPagesWrittenTo();
+		int pagesBeforePlanner = numberOfPagesWrittenTo1 + plannerDescription.timeTablePages() +
 		                         (addPlanningInstructions ? 1 : 0) + (addPersonalGoals ? 1 : 0);
-		int extraTimetablePages = pagesBeforePlanner % 2;
+		int extraTimetablePages = 1 - pagesBeforePlanner % 2; // the # of pages before the planner must be odd.
 		addTimeSpentTables(document, plannerDescription.timeTablePages() + extraTimetablePages);
 
 		if (addPlanningInstructions) {
@@ -271,9 +283,12 @@ public class PlannerGenerator {
 
 		addNotesPages(document, plannerDescription.notesPages());
 
-		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are missing (0-3).
+		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are
+		// missing (0-3).
 		// The formula purposefully comes up two pages short to accommodate the back cover.
-		int extraMindmapPages = 3 - (document.numberOfPagesWrittenTo() + plannerDescription.mindmapPages() + 1) % 4;
+		int numberOfPagesWrittenTo2 = document.numberOfPagesWrittenTo();
+		int expectedTotalNumberOfPages = numberOfPagesWrittenTo2 + plannerDescription.mindmapPages() + 2;
+		int extraMindmapPages = 3 - (expectedTotalNumberOfPages - 1) % 4;
 		addMindMapPages(document, plannerDescription.mindmapPages() + extraMindmapPages);
 
 		document.startNewPage(true);
@@ -282,11 +297,13 @@ public class PlannerGenerator {
 			document.drawFullPage(drawFullPageImage("/page_back.jpg"));
 		} else {
 			// Nearly blank back page
-			Paragraph closingRemarks = document.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
+			Paragraph closingRemarks = document
+					.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
 					.setTextAlignment(RIGHT)
 					.add("Gemaakt naar ontwerp van de Huizermaat");
 			Rectangle pageArea = document.getEffectiveArea();
-			document.addInFlow(closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
+			document.addInFlow(
+					closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
 		}
 	}
 
@@ -315,17 +332,24 @@ public class PlannerGenerator {
 		float titleScaledHeight = titleScaledWidth * titleImageData.getHeight() / titleImageData.getWidth();
 		Image titleImage = new Image(titleImageData).setWidth(titleScaledWidth).setHeight(titleScaledHeight);
 
-		ImageData logoImageData = ImageDataFactory.create(requireNonNull(getClass().getResource("/logo-huizermaat.png")));
+		ImageData logoImageData = ImageDataFactory.create(
+				requireNonNull(getClass().getResource("/logo-huizermaat.png")));
 		float logoWidth = pageWidth * 0.4f;
-		Image logoImage = new Image(logoImageData).setWidth(logoWidth).setHeight(logoWidth * logoImageData.getHeight() / logoImageData.getWidth());
+		Image logoImage = new Image(logoImageData).setWidth(logoWidth)
+				.setHeight(logoWidth * logoImageData.getHeight() / logoImageData.getWidth());
 
-		document.addInFlow(document.createParagraph(null, 48).add("\n" + title).setMarginBottom(0).setTextAlignment(CENTER));
-		document.addInFlow(document.createParagraph(null, 32).add(subtitle + "\n\n").setMarginBottom(0).setTextAlignment(CENTER));
+		document.addInFlow(
+				document.createParagraph(null, 48).add("\n" + title).setMarginBottom(0).setTextAlignment(CENTER));
+		document.addInFlow(
+				document.createParagraph(null, 32).add(subtitle + "\n\u00A0").setMarginBottom(0)
+						.setTextAlignment(CENTER));
 		document.addInFlow(titleImage.setHorizontalAlignment(HorizontalAlignment.CENTER));
-		document.addInFlow(document.createParagraph().add("\n\n\n\n\n\n\n\n\n\nDeze planner is van:\n\n"));
-		document.addInFlow(document.createParagraph().addTabStops(new TabStop(pageWidth * 0.75f, TabAlignment.LEFT, new SolidLine(.75f)))
+		document.addInFlow(document.createParagraph().add("\n\n\n\n\n\n\n\n\n\nDeze planner is van:\n\u00A0"));
+		document.addInFlow(document.createParagraph()
+				.addTabStops(new TabStop(pageWidth * 0.75f, TabAlignment.LEFT, new SolidLine(.75f)))
 				.add(new Tab()).add(" "));
-		document.addInFlow(logoImage.setFixedPosition(pageArea.getRight() - logoWidth, pageArea.getBottom(), logoWidth));
+		document.addInFlow(
+				logoImage.setFixedPosition(pageArea.getRight() - logoWidth, pageArea.getBottom(), logoWidth));
 	}
 
 	@SuppressWarnings("unused")
@@ -377,7 +401,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nVakanties en lesvrije dagen\n").setFontSize(16)).setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
-				.add(italic("2024 – 2025\n\n").setFontSize(14)).setTextAlignment(CENTER));
+				.add(italic("2024 – 2025\n\u00A0").setFontSize(14)).setTextAlignment(CENTER));
 
 		table = new Table(createPercentArray(new float[]{4.75f, 9.25f})).setAutoLayout()//.setFixedLayout()
 				.setHorizontalAlignment(HorizontalAlignment.CENTER)
@@ -400,7 +424,7 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding emergency plan");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("Noodplan\n\n").setFontSize(16))
+				.add(bold("Noodplan\n\u00A0").setFontSize(16))
 				.setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
 				.add(italic("(Plak hier de rode kaart die je van de conciërge krijgt)").setFontSize(14))
@@ -411,9 +435,8 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding prerequisites for learning");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("\nVoorwaarden voor leren").setFontSize(16)));
+				.add(bold("Voorwaarden voor leren\n\u00A0").setFontSize(16)));
 		document.addInFlow(document.createParagraph()
-				.add("\n")
 				.add("""
 						Voor je ligt de planagenda. In deze agenda kun je voor jezelf overzicht creëren in wat wanneer af moet
 						zijn, maar ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!
@@ -423,14 +446,15 @@ public class PlannerGenerator {
 						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het leren opgesteld.
 						Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom maar goed door.
 						""".replace("\n", " ").strip())
-				.add("\n\n"));
+				.add("\n\u00A0"));
 
 		float indent = mmToPt(10);
 		document.addInFlow(document.createParagraph()
 				.add(bold("Laat je niet afleiden")));
 		document.addInFlow(document.createParagraph()
 				.setMarginLeft(indent)
-				.add("Zorg dat alles wat je kan afleiden (denk aan telefoon, computer, te veel tabbladen open) niet bij jou in de buurt is.")
+				.add("Zorg dat alles wat je kan afleiden (denk aan telefoon, computer, te veel tabbladen open) niet " +
+				     "bij jou in de buurt is.")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Zoek een rustige plaats")));
@@ -441,7 +465,8 @@ public class PlannerGenerator {
 				.add(bold("Houd je doel voor ogen")));
 		document.addInFlow(document.createParagraph()
 				.setMarginLeft(indent)
-				.add("Bijvoorbeeld een cijfer dat je wilt halen; een onvoldoende wegwerken; een bepaalde studie die je wilt gaan doen.")
+				.add("Bijvoorbeeld een cijfer dat je wilt halen; een onvoldoende wegwerken; een bepaalde studie die " +
+				     "je wilt gaan doen.")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Neem er de tijd voor")));
@@ -465,11 +490,12 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("\nHERHALEN, HERHALEN, HERHALEN")));
 		document.addInFlow(document.createParagraph()
 				.add("""
-						     Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het allerbelangrijkste.
-						     Wanneer je veel aandacht aan iets geeft, worden er verbindingen aangelegd in je hersenen, waardoor je
-						     er steeds beter in wordt! In de eerste 20 minuten na het leren, kan je al zo’n 40% vergeten. Dat is
-						     bijna de helft! Herhalen zorgt ervoor dat je minder vergeet. Wanneer je dus veel aandacht aan iets
-						     geeft door het te herhalen, word je er én""".replace("\n", " ") + " ")
+						     Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het
+						     allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen
+						     aangelegd in je hersenen, waardoor je er steeds beter in wordt! In de eerste 20 minuten na
+						     het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft! Herhalen zorgt ervoor dat je
+						     minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je
+						     er én""".replace("\n", " ") + " ")
 				.add(italic("beter"))
 				.add(" in én ")
 				.add(italic("onthoudt"))
@@ -493,8 +519,7 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding planning instructions");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("Hoe overleef ik het plannen?").setFontSize(16))
-				.add("\n\n"));
+				.add(bold("Hoe overleef ik het plannen?\n\u00A0").setFontSize(16)));
 		document.addInFlow(document.createParagraph()
 				.add("""
 						In deze agenda kun je voor jezelf een overzicht creëren van je moet doen, wanneer het af moet zijn,
@@ -502,12 +527,13 @@ public class PlannerGenerator {
 						""".replace("\n", " ")));
 		document.addInFlow(document.createParagraph()
 				.add("Hieronder staan de stappen voor het maken en uitvoeren van een planning. ")
-				.add("Deze stappen zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom goed door.")
-				.add("\n\n"));
+				.add("Deze stappen zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze " +
+				     "daarom goed door.")
+				.add("\n\u00A0"));
 
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nStappenplan voor het maken van een planning:").setFontSize(16))
-				.add("\n\n"));
+				.add("\n\u00A0"));
 
 		Image checkedCircleImage = document.loadSvgImageResource("/circle-checked.svg").setWidth(10).setHeight(10);
 
@@ -521,16 +547,16 @@ public class PlannerGenerator {
 		         "Op dagen met veel afspraken kun je minder huiswerk maken.");
 		list.add("Plan je huiswerk en toetsen in. Hak het in kleine stukjes (taken).");
 		list.add("Dan ga je aan de slag! Nummer de taken. Begin bij de belangrijkste taak.");
-		ListItem listItem = new ListItem();
-		listItem.add(document.createParagraph().add("Taken die af zijn, vink je af met een check ").add(checkedCircleImage).add("."));
-		list.add(listItem);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Taken die af zijn, vink je af met een check ").add(checkedCircleImage).add(".")));
 		list.add("Heb je het aan het eind van de dag nog niet alles af? Plan deze taken opnieuw in.");
 		document.addInFlow(list);
 	}
 
 	private void addPersonalGoals(WritableDocument document) {
 		LOGGER.debug("Adding personal goals page");
-		BiConsumer<Integer, Paragraph> titleConsumer = (i, par) -> par.add(bold("Wat zijn je doelen voor de komende periode?\n\n\n").setFontSize(16));
+		BiConsumer<Integer, Paragraph> titleConsumer = (i, par) -> par.add(
+				bold("Wat zijn je doelen voor de komende periode?\n\n\u00A0").setFontSize(16));
 		addLinesPagesWithTitle(document, 1, titleConsumer);
 	}
 
@@ -543,7 +569,7 @@ public class PlannerGenerator {
 				.add("\n\n")
 				.add("\n\n")
 				.add("\n\n")
-				.add("\n\n")
+				.add("\n\u00A0")
 		);
 
 		Rectangle pageArea = document.getEffectiveArea();
@@ -577,9 +603,9 @@ public class PlannerGenerator {
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nHoe overleef ik leren?").setFontSize(16))
-				.add("\n\n"));
+				.add("\n\u00A0"));
 
-		List subjects = document.createList().setListSymbol("• ");
+		List subjects = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		subjects.setProperty(Property.LEADING, new Leading(Leading.MULTIPLIED, 2.5f));
 		subjects.add("Planning");
 		subjects.add("Organisatie");
@@ -603,7 +629,7 @@ public class PlannerGenerator {
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nHandige afkortingen").setFontSize(16))
-				.add("\n\n"));
+				.add("\n\u00A0"));
 
 		Table table1 = new Table(2).setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
 		table1.addHeaderCell(createCell0(document, "Vak")).addHeaderCell(createCell0(document, "Afkorting"));
@@ -626,9 +652,10 @@ public class PlannerGenerator {
 		document.addInFlow(table1);//.addInFlow(document.createParagraph().add("\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nHuiswerk Noteren").setFontSize(16))
-				.add("\n\n"));
+				.add("\n\u00A0"));
 
-		Table table2 = new Table(createPercentArray(new float[]{3, 2})).setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
+		Table table2 = new Table(createPercentArray(new float[]{3, 2})).setPadding(0).setMargin(0).setMarginBottom(16)
+				.setBorder(Border.NO_BORDER);
 		table2.addHeaderCell(createCell0(document, "Wat")).addHeaderCell(createCell0(document, "Afkorting"));
 		for (String cellText : java.util.List.of(
 				"Maken", "M",
@@ -644,22 +671,34 @@ public class PlannerGenerator {
 		document.addInFlow(table2);//.addInFlow(document.createParagraph().add("\u00A0"));
 
 		document.addInFlow(document.createParagraph()
-				.add(bold("\nHandige Sites").setFontSize(16))
-				.add("\n\n"));
+				.add(bold("\nNuttige dingen").setFontSize(16))
+				.add("\n\u00A0"));
 
 		Table table3 = new Table(createPercentArray(new float[]{2, 3}))
 				.useAllAvailableWidth().setFixedLayout()
 				.setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
-		table3.addHeaderCell(createCell(document, "Website")).addHeaderCell(createCell(document, "Inloggegevens"));
-		java.util.List.of(
+		table3.addHeaderCell(createCell(document, "Wat"))
+				.addHeaderCell(createCell(document, "Inloggegevens / e-mail"));
+		// noinspection ExtractMethodRecommender
+		java.util.List<Map.Entry<String, String>> usefulLinks = java.util.List.of(
 				Map.entry("SomToday (agenda)", "https://inloggen.somtoday.nl/"),
 				Map.entry("Zermelo (rooster)", "https://hzm-gsf.zportal.nl/"),
-				Map.entry("Schoolmail", "https://mail.google.com/")
-		).forEach(entry ->
-				table3.addCell(createCell(document, 1, LEFT,
-						p -> p.add(entry.getKey() + "\n").add(new Link(entry.getValue(), PdfAction.createURI(entry.getValue())))
-				)).addCell(emptyCell(document)));
-		for (int i = 0; i < 4; i++) {
+				Map.entry("Schoolmail", "https://mail.google.com/"),
+				Map.entry("E-mail mentor 1", ""),
+				Map.entry("E-mail mentor 2", ""),
+				Map.entry("Kluisnummer", "")
+		);
+		usefulLinks.forEach(entry ->
+				table3.addCell(createCell(document, 1, LEFT, p -> {
+					p.add(entry.getKey() + "\n");
+					String link = entry.getValue();
+					if (link.isEmpty()) {
+						p.add("\u00A0");
+					} else {
+						p.add(new Link(link, PdfAction.createURI(link)));
+					}
+				})).addCell(emptyCell(document)));
+		for (int i = 0; i < 7 - usefulLinks.size(); i++) {
 			table3.addCell(createCell(document, "\n\u00A0")).addCell(emptyCell(document));
 		}
 		document.addInFlow(table3);
@@ -679,8 +718,9 @@ public class PlannerGenerator {
 
 		document.addInFlow(document.createParagraph().add(bold("Tips voor het leren:").setFontSize(14)));
 
-		document.addInFlow(document.createParagraph()
-				.add("Hoe zorg je ervoor dat je niet wordt afgeleid tijdens het maken van je huiswerk of het leren van toetsen?")
+		document.addInFlow(document.createParagraph().add(
+				"Hoe zorg je ervoor dat je niet wordt afgeleid tijdens het maken van je huiswerk of het leren " +
+				"van toetsen?")
 		).addInFlow(blockWithLines);
 		document.addInFlow(document.createParagraph()
 				.add("Hoe kom je erachter wat je precies moet maken of leren?")
@@ -696,6 +736,246 @@ public class PlannerGenerator {
 		).addInFlow(blockWithLines);
 	}
 
+	private void addHowToLearn(WritableDocument document) {
+		LOGGER.debug("Adding how to learn");
+		document.startNewPage(false);
+		document.addInFlow(document.createParagraph()
+				.add(bold("Voor je begint met leren:\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
+
+		Image heroBrainImage = new Image(ImageDataFactory.create(
+				requireNonNull(getClass().getResource("/Heldenbrein.jpg"))))
+				// .setMarginLeft(mmToPt(5))
+				// .setMarginBottom(mmToPt(5))
+				.scaleToFit(mmToPt(35), mmToPt(35));
+		heroBrainImage.setProperty(Property.FLOAT, FloatPropertyValue.RIGHT);
+		document.addInFlow(heroBrainImage);
+
+		List list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		// List list = document.createList().setListSymbol("● ");
+		list.add("Probeer niet alles in 1x te leren, deel het leerwerk daarom op in kleine stukjes.");
+		list.add("Hoe vaker je “traint”, hoe sterker de verbindingen in je hersenen worden.");
+		list.add("""
+				Je kent de leerstof pas echt goed als je het zonder je boek of aantekeningen erbij kan \
+				opschrijven/uitspreken/vertellen. Bijvoorbeeld wanneer je wordt overhoord door iemand anders of het \
+				aan een medeleerling uitlegt.""");
+		list.add("""
+				Het duurt ongeveer 15 minuten voor je hersenen in de leermodus zijn. Zorg daarom dat je tijdens het \
+				leren niet afgeleid wordt. Leg je telefoon in een andere kamer of zet je computer uit.""");
+		list.add("""
+				Wanneer je slaapt verwerken je hersenen alle nieuwe dingen die je hebt geleerd. Genoeg slapen is dus \
+				belangrijk.""");
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold(
+				"Verschillende manieren om begrippen en/of woordjes te leren (Engels/Frans/Duits):")
+				.setFontSize(16)));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Overschrijven")).add("\nSchrijf de woorden in het Engels meerdere keren over,")
+				.add(" zo oefen je de spelling van alle woorden goed.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Memory")).add("\n")
+				.add("""
+						Maak kaartjes van alle woorden die je moet leren in het Nederlands en Engels. Hussel alle \
+						Nederlandse en Engelse kaartjes en leg ze met de tekst naar beneden. Draai iedere keer 2 \
+						kaartjes om, wanneer je een match hebt (Nederlands + Engels kaartje) haal je de kaartjes uit \
+						het spel.""")));
+		// noinspection SpellCheckingInspection
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Digitaal overhoorprogramma")).add(" (bv Slim stampen/Quizlet/Wozzol/Teach2000/blooket)")
+				.add("\nEr zijn online veel overhoorprogramma’s te vinden. Zorg ervoor dat je altijd alle " +
+				     "moeilijkheidsgraden doorloopt: onthouden → meerkeuze → spellen.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Leer groepjes met hetzelfde thema tegelijk"))
+				.add("\nWanneer je woorden groepeert die hetzelfde thema hebben, " +
+				     "is het makkelijker om ze te onthouden.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Flashcards")).add("\n")
+				.add("""
+						Maak kaartjes met aan de ene kant het Engelse woord en aan de andere kant het Nederlandse \
+						woord. Hussel alle kaartjes door elkaar en bekijk de kaartjes 1 voor 1. Bedenk per kaartje wat \
+						het woord op de achterkant is. Je draait het kaartje om en je checkt of je het antwoord goed \
+						had. Maak stapeltjes wist ik/wist ik nog niet. Herhaal alle woorden die je nog niet wist nog \
+						een aantal keer. Om de flashcards een stapje moeilijker te maken kan je ook het woord wat op \
+						de achterkant staat opschrijven op een blaadje. Zo oefen je meteen met het spellen van de \
+						woorden.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Voorbeeldzinnen verzinnen"))
+				.add("\nVerzin bij alle woorden uit de woordenlijst een nieuwe Engelse zin waaruit de betekenis van " +
+				     "het Engels woord duidelijk is.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Plaatjes/ezelsbruggetjes erbij verzinnen"))
+				.add("\nProbeer om ezelsbruggetjes of plaatjes te verzinnen bij de woordenlijst die je moet leren.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Laten overhoren door iemand anders"))
+				.add("\nLaat je door iemand die je kent overhoren. Dit kan mondeling, maar het is ook verstandig om " +
+				     "de Engelse woorden op te schrijven. Zo oefen je ook de spelling van de woorden.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Afdekmethode"))
+				.add("\nDek de Nederlandse/Engelse woordjes af met een blaadje. Bedenk ik je hoofd wat de vertaling " +
+				     "is, verschuif het papiertje en kijk of je het antwoord goed had. Je kan ook de woorden " +
+				     "opschrijven en de spelling controleren.")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold(
+				"Verschillende manieren om grote stukken tekst en begrippen te leren:").setFontSize(16)));
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Mindmap maken:").setFontSize(14)));
+
+		Image mindmapImage = new Image(ImageDataFactory.create(
+				requireNonNull(getClass().getResource("/MindMap.png"))))
+				.scaleToFit(document.getEffectiveArea().getWidth() / 2, mmToPt(100));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Maak gebruik van de leerdoelen die bij elke paragraaf (GS/AK) staan. Zorg ervoor dat je deze \
+				leerdoelen goed kunt beantwoorden. Laat ze terugkomen in je samenvatting."""));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 1: ")).add("Kies je hoofdthema. Het maken van een ").add(bold("mindmap"))
+				.add(" begint met het kiezen van een centraal thema.Bijv: Onderwerp van de paragraaf")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 2: ")).add("Voeg subthema's toe.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 3: ")).add("Vul details in.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 4: ")).add("Gebruik kleuren en afbeeldingen:\n")
+				.add(mindmapImage)));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 5: ")).add("Maak verbindingen / meer zijtakken.")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(
+				document.createParagraph().add(bold("Samenvatting maken van een tekst:").setFontSize(14)));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Om een goede samenvatting te kunnen schrijven is het belangrijk om te weten wat hoofd- en bijzaken \
+				zijn. In een goede samenvatting staan namelijk alleen maar hoofdzaken. De belangrijkste informatie in \
+				een tekst die wordt gegeven over het onderwerp noemen we hoofdzaken. Minder belangrijke informatie \
+				noemen we bijzaken."""));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Gebruik je eigen woorden. Ga dus niet telkens de belangrijkste zin uit de alinea letterlijk \
+				overschrijven. Als je het in je eigen woorden formuleert, heb je erover nagedacht!"""));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 1: "))
+				.add("Streep de belangrijkste zinnen aan. Loop eerst de belangrijkste onderdelen van je tekst na: " +
+				     "inleiding en slot.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 2: ")).add("Orden je informatie.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 3: ")).add("Schrijf de ").add(bold("samenvatting")).add(".")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 4: ")).add("Maak het overzichtelijk.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Stap 5: ")).add("Check je ").add(bold("samenvatting")).add(".")));
+		document.addInFlow(list);
+		document.addInFlow(document.createParagraph().add("Andere methodes om samen te vatten:"));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add("Cornell methode (youtube)");
+		list.add("Braindump:  leren leren (youtube)");
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Maakwerk:").setFontSize(16)));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add("Je maakwerk ook nakijken, zodat je weet of je de opdrachten goed hebt gedaan en snapt");
+		list.add("Als je gaat leren, ook je werkboek opdrachten doorlopen om te checken wat je fout had gedaan, " +
+		         "blijkbaar vond je dat moeilijk.");
+		list.add("Als opdrachten in de les zijn besproken dan is het ook handig om dat in je werkboek met een " +
+		         "uitroepteken aan te geven. Blijkbaar was dat een belangrijke vraag/vaardigheid enz.");
+		document.addInFlow(list);
+
+		java.util.List<String> usefulWebsitesTitles = java.util.List.of(
+				"Handige Websites algemeen",
+				"Websites Frans",
+				"Websites Engels",
+				"Websites Duits",
+				"Websites Science",
+				"Websites Nederlands",
+				"Websites Wiskunde",
+				"Websites OSA"
+		);
+		// noinspection SpellCheckingInspection
+		java.util.List<java.util.List<Map.Entry<String, String>>> usefulWebsites = java.util.List.of(
+				java.util.List.of( // Algemeen
+						Map.entry("https://studygo.nl/", ""),
+						Map.entry("https://quizlet.com/", ""),
+						Map.entry("https://www.wozzol.nl/", ""),
+						Map.entry("https://www.teach.nl/", "")
+				), java.util.List.of( // Frans
+						Map.entry("https://www.verbuga.eu/Mise/Mise.html", " (werkwoorden)")
+				), java.util.List.of( // Engels
+						Map.entry("https://readtheory.org/", "")
+				), java.util.List.of( // Duits
+						Map.entry("https://www.duits.de/", ""),
+						Map.entry("https://www.nubeterduits.nl/website/index.php?pag=1", ""),
+						Map.entry("https://deutsch-lernen.zum.de/wiki/Handlungsfelder", "")
+				), java.util.List.of( // Science
+						Map.entry("https://biologiepagina.nl/", " (bio)"),
+						Map.entry("", "Youtube: meneer wiersma (nask)")
+				), java.util.List.of( // Nederlands
+						Map.entry("https://www.cambiumned.nl/", "")
+				), java.util.List.of( // Wiskunde
+						Map.entry("", "In de digitale omgeving van je boek kan je ook uitlegfilmpjes vinden"),
+						Map.entry("", "Youtube: Math with Menno"),
+						Map.entry("", "Youtube: Wiskundeacademie")
+				), java.util.List.of( // OSA
+						Map.entry("", "Youtube: aardrijkskunde kennisclips"),
+						Map.entry("https://www.schooltv.nl/", ": histoclips over verschillende historische " +
+						                                      "onderwerpen en de serie ‘Welkom in…’")
+				));
+		for (int i = 0; i < usefulWebsitesTitles.size(); i++) {
+			String title = usefulWebsitesTitles.get(i);
+			java.util.List<Map.Entry<String, String>> websites = usefulWebsites.get(i);
+			document.addInFlow(document.createParagraph());
+			document.addInFlow(document.createParagraph().add(bold(title + ":").setFontSize(16)));
+			list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+			for (Map.Entry<String, String> entry : websites) {
+				String url = entry.getKey();
+				Text link = url.isEmpty() ? new Text("") : new Link(url, PdfAction.createURI(url));
+				String text = entry.getValue();
+				list.add((ListItem) new ListItem().add(document.createParagraph().add(link).add(text)));
+			}
+			document.addInFlow(list);
+		}
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Maken van oefentoetsen:").setFontSize(16)));
+		document.addInFlow(document.createParagraph().add("Waar kun je de oefentoetsen per vak vinden:"));
+		Table table = new Table(createPercentArray(5)) // new float[]{2, 3}))
+				.useAllAvailableWidth().setFixedLayout()
+				.setPadding(0).setMargin(0).setBorder(Border.NO_BORDER);
+		table.addHeaderCell(createCell(document, "Vak"))
+				.addHeaderCell(createCell(document, "Classroom"))
+				.addHeaderCell(createCell(document, "Digitale methode"))
+				.addHeaderCell(createCell(document, "Boek"))
+				.addHeaderCell(createCell(document, "Overig (graag benoemen)"));
+		// noinspection SpellCheckingInspection
+		for (String text : java.util.List.of(
+				"Nederlands", "x", "", "", "",
+				"Engels", "x", "", "x", "",
+				"Frans", "", "x (le bilan)", "", "",
+				"Duits", "x (soms als extra)", "x", "", "",
+				"Science (bio)", "", "x", "x", "https://biologiepagina.nl/",
+				"Science (nask)", "", "x", "x", "",
+				"ODSA (ak)", "", "", "", "",
+				"ODSA (ges)", "", "x", "x", "",
+				"Wiskunde", "x", "x", "x", ""
+		)) {
+			table.addCell(createCell(document, 1, TextAlignment.LEFT, p -> {
+				if (text.isEmpty()) {
+					p.add("\u00A0");
+				} else if (text.startsWith("http")) {
+					p.add(new Link(text, PdfAction.createURI(text)));
+				} else {
+					p.add(text);
+				}
+			}));
+		}
+		document.addInFlow(table);
+	}
+
 	private void addHowToSurviveTheFreshmanYear(WritableDocument document) {
 		LOGGER.debug("Adding guide to survive as a freshman");
 		document.startNewPage(false);
@@ -709,7 +989,8 @@ public class PlannerGenerator {
 				briefje mag jij de les in, of je nu geoorloofd te laat was of niet.
 				""".replace("\n", " ")));
 
-		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik naar de orthodontist/dokter moet?")));
+		document.addInFlow(
+				document.createParagraph().add(bold("\nWat moet ik doen als ik naar de orthodontist/dokter moet?")));
 		document.addInFlow(document.createParagraph().add("""
 				Je ouders moeten voor de afspraak aan school laten weten welk lesuur je er niet bent.
 				Dat kan door te bellen, of ze geven je een briefje voor de conciërges mee met daarin waarom je welk lesuur niet aanwezig kunt zijn.
@@ -718,7 +999,8 @@ public class PlannerGenerator {
 
 		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik ziek ben?")));
 		document.addInFlow(document.createParagraph()
-				.add("Als je ziek bent, dan bellen je ouders voor het eerste lesuur naar school om je ziek te melden.\n\u00A0"));
+				.add("Als je ziek bent, dan bellen je ouders voor het eerste lesuur naar school om je ziek te melden" +
+				     ".\n\u00A0"));
 
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik ziek naar huis wil?")));
 		document.addInFlow(document.createParagraph().add("""
@@ -739,7 +1021,8 @@ public class PlannerGenerator {
 				Tijdens de gymles bewaar je je chromebook en je telefoon in je kluisje.
 				""".replace("\n", " ")));
 
-		document.addInFlow(document.createParagraph().add(bold("\nZijn alle gymlessen in de gymzalen van Huizermaat?")));
+		document.addInFlow(
+				document.createParagraph().add(bold("\nZijn alle gymlessen in de gymzalen van Huizermaat?")));
 		document.addInFlow(document.createParagraph().add("""
 				Nee, vanaf april tot aan de herfstvakantie gymmen we buiten op de sportvelden en de atletiekbaan,
 				op twee minuten van de school.
@@ -772,7 +1055,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add("""
 				Zodra je door de klapdeuren een leszone in loopt, gelden de volgende afspraken:
 				""".replace("\n", " ")));
-		List learningZoneRules = document.createList().setListSymbol("- ");
+		List learningZoneRules = document.createList().setListSymbol(LIST_SYMBOL_HYPHEN_BULLET);
 		learningZoneRules.add("Je praat zachtjes en loopt rustig.");
 		learningZoneRules.add("Je hebt geen jas aan (deze ligt al in je kluis).");
 		learningZoneRules.add("Je hebt je telefoon niet bij je (deze ligt al in je kluis).");
@@ -794,14 +1077,22 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Tijdschema:\n").setFontSize(16)));
 		document.addInFlow(document.createParagraph()
-				.add("Hoe is jouw week gevuld met school, hobby’s en sporten? Vul dit hieronder in. Geef elk tijdsblok een ander kleurtje."));
+				.add("Hoe is jouw week gevuld met school, hobby’s en sporten? Vul dit hieronder in. Geef elk " +
+				     "tijdsblok een ander kleurtje."));
 
 		UnitValue[] columnWidths = createPercentArray(8);
-		Table table = new Table(columnWidths).useAllAvailableWidth().setFixedLayout().setPadding(0).setMargin(0).setMarginBottom(16);
-		LocalTime startOfDay = LocalTime.of(8, 0); // Must be a longer duration after midnight than the minutes we add in the loop
-		for (LocalTime time = startOfDay; !time.isBefore(startOfDay); time = time.plusMinutes(30)) {
-			table.addCell(new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(1.15f))
-					.setTextAlignment(RIGHT).setPaddings(3, 6, -3, 0));
+		Table table = new Table(columnWidths).useAllAvailableWidth().setFixedLayout().setPadding(0).setMargin(0)
+				.setMarginBottom(16);
+		LocalTime startOfDay = LocalTime.of(8, 0);
+		LocalTime endOfDay = LocalTime.of(23, 0);
+		table.addCell(emptyCell(document));
+		for (DayOfWeek value : DayOfWeek.values()) {
+			table.addCell(capitalize(WEEKDAY_FORMAT.format(value)));
+		}
+		for (LocalTime time = startOfDay; !time.isAfter(endOfDay); time = time.plusMinutes(30)) {
+			table.addCell(
+					new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(1.15f))
+							.setTextAlignment(RIGHT).setPaddings(3, 6, -3, 0));
 			for (int c = 1; c < columnWidths.length; c++) {
 				table.addCell(emptyCell(document));
 			}
@@ -809,7 +1100,8 @@ public class PlannerGenerator {
 		document.addInFlow(table);
 	}
 
-	private void addPlanningWeeks(WritableDocument document, int numClassSlots, NavigableMap<LocalDate, String> dateTitles)
+	private void addPlanningWeeks(WritableDocument document, int numClassSlots,
+	                              NavigableMap<LocalDate, String> dateTitles)
 			throws IOException {
 		LOGGER.debug("Adding planning weeks");
 
@@ -825,14 +1117,16 @@ public class PlannerGenerator {
 		}
 
 		LocalDate lastDateThatMustBePresent = dateTitles.lastKey();
-		for (LocalDate monday = dateTitles.firstKey(); !monday.isAfter(lastDateThatMustBePresent); monday = monday.plusWeeks(1)) {
+		for (LocalDate monday = dateTitles.firstKey(); !monday.isAfter(
+				lastDateThatMustBePresent); monday = monday.plusWeeks(1)) {
 			int extraPadding = 9;
 			LOGGER.debug("Adding planning week starting on {}", monday);
 
 			ClassItemStructure classItemStructure = plannerDescription.classItemStructure();
 			int numberOfWeeks = (int) WEEKS.between(dateTitles.firstKey(), monday);
 			if (classItemStructure == null) {
-				ClassItemStructure[] choices = new ClassItemStructure[]{ClassItemStructure.CLASS_ROOM_SINGLE, ClassItemStructure.CLASS_ROOM_DOUBLE,
+				ClassItemStructure[] choices = new ClassItemStructure[]{ClassItemStructure.CLASS_ROOM_SINGLE,
+						ClassItemStructure.CLASS_ROOM_DOUBLE,
 						ClassItemStructure.CLASS_ROOM_TRIPLE};
 				classItemStructure = choices[(numberOfWeeks % choices.length)];
 			}
@@ -855,7 +1149,8 @@ public class PlannerGenerator {
 					.add("\n");
 			document.addInFlow(header);
 
-			Table table = new Table(columnWidths).useAllAvailableWidth().setPadding(0).setMargin(0).setMarginBottom(16).setFixedLayout();
+			Table table = new Table(columnWidths).useAllAvailableWidth().setPadding(0).setMargin(0).setMarginBottom(16)
+					.setFixedLayout();
 			for (int c = 0; c < 3; c++) {
 				// Monday to Wednesday
 				table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(c)));
@@ -869,16 +1164,18 @@ public class PlannerGenerator {
 				table.addCell(createCell(document, 1, "Planning"));
 			}
 			for (int r = 0; r < numPlanningSlots * 3; r++) {
-				table.addCell(createCell(document, 1, RIGHT, p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+				table.addCell(createCell(document, 1, RIGHT,
+						p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 			}
 			document.addInFlow(table);
 
 			// Right page: Thursday to Sunday
 
 			document.startNewPage(false);
-			// document.addInFlow(document.createParagraph().add("\n"));
+			document.addInFlow(document.createParagraph().add("\u00A0"));
 
-			table = new Table(columnWidths).useAllAvailableWidth().setPadding(0).setMargin(0).setMarginBottom(16).setFixedLayout();
+			table = new Table(columnWidths).useAllAvailableWidth().setPadding(0).setMargin(0).setMarginBottom(16)
+					.setFixedLayout();
 			for (int c = 0; c < 3; c++) {
 				// Thursday to Saturday
 				table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(c + 3)));
@@ -886,13 +1183,16 @@ public class PlannerGenerator {
 			for (int r = 0; r < numClassSlots; r++) {
 				table.addCell(getCreateClassCell(document, 2, extraPadding, classItemStructure, r + 1));
 				table.addCell(getCreateClassCell(document, 2, extraPadding, classItemStructure, r + 1));
-				// These planning cells are less high than the others, but will grow to the same size as the numbered cells.
+				// These planning cells are less high than the others, but will grow to the same size as the numbered
+				// cells.
 				// The other two sets of planning sets must create their own height correctly.
 				if (r == 0) {
 					table.addCell(createCell(document, 1, "Planning"));
-					table.addCell(createCell(document, 1, RIGHT, p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 1, RIGHT,
+							p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				} else {
-					table.addCell(createCell(document, 2, RIGHT, p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 2, RIGHT,
+							p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				}
 			}
 			table.addCell(createCell(document, 1, "Planning"));
@@ -900,20 +1200,25 @@ public class PlannerGenerator {
 			// Sunday
 			table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(6)));
 			for (int r = 0; r < numPlanningSlots; r++) {
-				table.addCell(createCell(document, 2, RIGHT, p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
-				table.addCell(createCell(document, 2, RIGHT, p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+				table.addCell(createCell(document, 2, RIGHT,
+						p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+				table.addCell(createCell(document, 2, RIGHT,
+						p -> p.add("\n\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				if (r == 0) {
 					table.addCell(createCell(document, 1, "Planning"));
-					table.addCell(createCell(document, 1, RIGHT, p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 1, RIGHT,
+							p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				} else {
-					table.addCell(createCell(document, 2, RIGHT, p -> p.add("\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
+					table.addCell(createCell(document, 2, RIGHT,
+							p -> p.add("\n\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				}
 			}
 			document.addInFlow(table);
 		}
 	}
 
-	private Cell getCreateClassCell(WritableDocument document, int rowspan, int extraPadding, ClassItemStructure classItemStructure, int classHour) {
+	private Cell getCreateClassCell(WritableDocument document, int rowspan, int extraPadding,
+	                                ClassItemStructure classItemStructure, int classHour) {
 		float extraPadding1 = extraPadding + 22f;
 		float extraPadding2 = ((extraPadding + 11f) / 2f) - 0.5f;
 		float extraPadding3 = (extraPadding / 3f) - 1f;
@@ -921,8 +1226,10 @@ public class PlannerGenerator {
 		if (classItemStructure == ClassItemStructure.SINGLE_FIELD) {
 			return createCell(document, rowspan, classHour + "\n\n\u00A0").setPaddingBottom(extraPadding);
 		}
-		Table t = new Table(createPercentArray(new float[]{1, 3})).useAllAvailableWidth().setFixedLayout().setPadding(0).setMargin(0)
-				.setBorder(Border.NO_BORDER);
+		Table t =
+				new Table(createPercentArray(new float[]{1, 3})).useAllAvailableWidth().setFixedLayout().setPadding(0)
+						.setMargin(0)
+						.setBorder(Border.NO_BORDER);
 		switch (classItemStructure) {
 			case CLASS_ROOM_SINGLE -> {
 				t.addCell(b(6, createCell(document, 1, classHour + "\u00A0").setPaddingBottom(extraPadding2)));
@@ -947,12 +1254,16 @@ public class PlannerGenerator {
 		return new Cell(rowspan, 1).setMargin(0).setPadding(0).add(t);
 	}
 
-	private Cell createDateCellWithText(WritableDocument document, NavigableMap<LocalDate, String> dateTitles, float columnWidth, LocalDate date) {
-		String dayText = Optional.ofNullable(dateTitles.floorEntry(date).getValue()).filter(s -> !s.isEmpty()).orElse("\u00A0");
-		return createCell(document, 1, TextAlignment.LEFT, p -> p.add(date.format(DAY_FORMAT) + "\n").add(text(document, columnWidth, "…", dayText)));
+	private Cell createDateCellWithText(WritableDocument document, NavigableMap<LocalDate, String> dateTitles,
+	                                    float columnWidth, LocalDate date) {
+		String dayText = Optional.ofNullable(dateTitles.floorEntry(date).getValue()).filter(s -> !s.isEmpty())
+				.orElse("\u00A0");
+		return createCell(document, 1, TextAlignment.LEFT,
+				p -> p.add(date.format(DAY_FORMAT) + "\n").add(text(document, columnWidth, "…", dayText)));
 	}
 
-	private Text text(WritableDocument document, float width, @SuppressWarnings("SameParameterValue") String truncatedTextSuffix, String textToFit) {
+	private Text text(WritableDocument document, float width,
+	                  @SuppressWarnings("SameParameterValue") String truncatedTextSuffix, String textToFit) {
 		if (document.getTextWidth(textToFit) <= width) {
 			return new Text(textToFit);
 		}
@@ -973,14 +1284,16 @@ public class PlannerGenerator {
 	}
 
 	private Cell createCell(WritableDocument document, int rowspan, String text) {
-		return createCell(document, rowspan, TextAlignment.LEFT, paragraph -> paragraph.add(requireNonNullElse(text, "\u00A0")));
+		return createCell(document, rowspan, TextAlignment.LEFT,
+				paragraph -> paragraph.add(requireNonNullElse(text, "\u00A0")));
 	}
 
 	private Cell createCell0(WritableDocument document, String text) {
 		return createCell(document, 1, text).setBorder(Border.NO_BORDER);
 	}
 
-	private Cell createCell(WritableDocument document, int rowspan, TextAlignment alignment, Consumer<Paragraph> paragraphConsumer) {
+	private Cell createCell(WritableDocument document, int rowspan, TextAlignment alignment,
+	                        Consumer<Paragraph> paragraphConsumer) {
 		Paragraph paragraph = document.createParagraph(10.5f).setMargin(0).setMultipliedLeading(1);
 		paragraphConsumer.accept(paragraph);
 		Cell cell = new Cell(rowspan, 1).setMargin(0);
@@ -988,8 +1301,9 @@ public class PlannerGenerator {
 	}
 
 	/**
-	 * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell border.
-	 * The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left borders respectively.
+	 * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell
+	 * border. The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left
+	 * borders respectively.
 	 */
 	private Cell b(int nibble, Cell element) {
 		if ((nibble & 0b00001000) == 0) {
@@ -1010,13 +1324,14 @@ public class PlannerGenerator {
 	private void addNotesPages(WritableDocument document, int numberOfNotesPages) {
 		LOGGER.debug("Adding {} notes pages", numberOfNotesPages);
 		BiConsumer<Integer, Paragraph> titleConsumer = (i, par) -> {
-			String header = i == 0 ? "\nRUIMTE VOOR AANTEKENINGEN\n\n\n" : "\n\n\n\n";
+			String header = i == 0 ? "\nRUIMTE VOOR AANTEKENINGEN\n\n\u00A0" : "\n\n\n\u00A0";
 			par.add(header).setTextAlignment(CENTER);
 		};
 		addLinesPagesWithTitle(document, numberOfNotesPages, titleConsumer);
 	}
 
-	private static void addLinesPagesWithTitle(WritableDocument document, int numberOfNotesPages, BiConsumer<Integer, Paragraph> titleConsumer) {
+	private static void addLinesPagesWithTitle(WritableDocument document, int numberOfNotesPages,
+	                                           BiConsumer<Integer, Paragraph> titleConsumer) {
 		float pageWidth = document.getEffectiveArea().getWidth();
 		Paragraph blockWithLines = document.createParagraph(null, 14)
 				.addTabStops(new TabStop(pageWidth, TabAlignment.LEFT, new SolidLine(.75f)))
@@ -1027,7 +1342,8 @@ public class PlannerGenerator {
 			Paragraph paragraph = document.createParagraph();
 			titleConsumer.accept(i, paragraph);
 			document.addInFlow(paragraph);
-			document.addInFlow(blockWithLines).addInFlow(blockWithLines).addInFlow(blockWithLines).addInFlow(blockWithLines);
+			document.addInFlow(blockWithLines).addInFlow(blockWithLines).addInFlow(blockWithLines)
+					.addInFlow(blockWithLines);
 		}
 	}
 
@@ -1035,7 +1351,7 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding {} mind map pages", numberOfMindMapPages);
 		for (int i = 0; i < numberOfMindMapPages; i++) {
 			document.startNewPage(false);
-			String header = i == 0 ? "\nRUIMTE VOOR MINDMAPS\n\n\n" : "\n\n\n\n";
+			String header = i == 0 ? "\nRUIMTE VOOR MINDMAPS\n\n\u00A0" : "\n\n\n\u00A0";
 			document.addInFlow(document.createParagraph().add(header).setTextAlignment(CENTER));
 			document.draw((canvas, area) -> canvas.getPdfCanvas()
 					.setLineWidth(0.5f).setColor(ColorConstants.BLACK, false)

@@ -13,11 +13,14 @@ import static java.util.Comparator.naturalOrder;
  *
  * @author <a href="mailto:oscar@westravanholthe.nl">Oscar Westra van Holthe — Kind</a>
  */
-public record PlannerDescription(String title, String subtitle, int timeTablePages, int notesPages, int mindmapPages, int numClasses,
-                                 ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages, List<DateTitle> dateTitles) {
-	public PlannerDescription(String title, String subtitle, int timeTablePages, int notesPages, int mindmapPages, int numClasses,
-	                          ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages, DateTitle... dateTitles) {
-		this(title, subtitle, timeTablePages, notesPages, mindmapPages, numClasses, classItemStructure, staticPages, List.of(dateTitles));
+public record PlannerDescription(String title, String subtitle, int timeTablePages, int notesPages, int mindmapPages,
+                                 int numClasses, ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages,
+                                 List<DateTitle> dateTitles) {
+	public PlannerDescription(String title, String subtitle, int timeTablePages, int notesPages, int mindmapPages,
+	                          int numClasses, ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages,
+	                          DateTitle... dateTitles) {
+		this(title, subtitle, timeTablePages, notesPages, mindmapPages, numClasses, classItemStructure, staticPages,
+				List.of(dateTitles));
 	}
 
 	public NavigableMap<LocalDate, String> sortedDateTitles() {
