@@ -101,7 +101,8 @@ public class PlannerGenerator {
 							StaticPage.HOW_TO_LEARN,
 							StaticPage.PREREQUISITES_LEARNING,
 							StaticPage.PLANNING_INSTRUCTIONS,
-							StaticPage.PERSONAL_GOALS
+							StaticPage.PERSONAL_GOALS,
+							StaticPage.GRADE_LIST
 					),
 					new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
 					new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
@@ -231,6 +232,9 @@ public class PlannerGenerator {
 
 		if (plannerDescription.staticPages().contains(StaticPage.SCHEDULE_AND_VACATIONS)) {
 			addClassSchedulesAndVacations(document);
+		}
+		if (plannerDescription.staticPages().contains(StaticPage.GRADE_LIST)) {
+			addGradeList(document);
 		}
 		if (plannerDescription.staticPages().contains(StaticPage.SURVIVE_FRESHMAN_YEAR)) {
 			addHowToSurviveTheFreshmanYear(document);
@@ -436,16 +440,13 @@ public class PlannerGenerator {
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
 				.add(bold("Voorwaarden voor leren\n\u00A0").setFontSize(16)));
-		document.addInFlow(document.createParagraph()
-				.add("""
-						Voor je ligt de planagenda. In deze agenda kun je voor jezelf overzicht creëren in wat wanneer af moet
-						zijn, maar ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!
-						""".replace("\n", " ")));
-		document.addInFlow(document.createParagraph()
-				.add("""
-						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het leren opgesteld.
-						Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze daarom maar goed door.
-						""".replace("\n", " ").strip())
+		document.addInFlow(document.createParagraph().add("""
+				Voor je ligt de planagenda. In deze agenda kun je voor jezelf overzicht creëren in wat wanneer af moet \
+				zijn, maar ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!"""));
+		document.addInFlow(document.createParagraph().add("""
+				Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het \
+				leren opgesteld. Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, \
+				lees ze daarom maar goed door.""")
 				.add("\n\u00A0"));
 
 		float indent = mmToPt(10);
@@ -459,14 +460,14 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Zoek een rustige plaats")));
 		document.addInFlow(document.createParagraph()
-				.setMarginLeft(indent).add("Waar je je op je gemak voelt én je kan concentreren.")
+				.setMarginLeft(indent).add("Waar je je op je gemak voelt én kan concentreren.")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Houd je doel voor ogen")));
 		document.addInFlow(document.createParagraph()
 				.setMarginLeft(indent)
-				.add("Bijvoorbeeld een cijfer dat je wilt halen; een onvoldoende wegwerken; een bepaalde studie die " +
-				     "je wilt gaan doen.")
+				.add("Bijvoorbeeld laten zien dat je de stof beheerst; een cijfer dat je wilt halen; " +
+				     "een onvoldoende wegwerken; een bepaalde studie die je wilt gaan doen.")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Neem er de tijd voor")));
@@ -479,7 +480,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.setMarginLeft(indent)
 				.add("Kijk goed naar wat je moet leren en bedenk hoeveel tijd je daarvoor nodig hebt. ")
-				.add("Een dag voor de toets niks nieuws leren, maar ").add(underline("alles herhalen")).add(".")
+				.add("Leer de dag voor de toets niks nieuws, maar ").add(underline("herhaal alles")).add(".")
 				.add("\n\u00A0"));
 		document.addInFlow(document.createParagraph()
 				.add(bold("Bedenk hoe je de informatie het beste kunt leren")));
@@ -488,14 +489,13 @@ public class PlannerGenerator {
 				.add("\n\u00A0"));
 
 		document.addInFlow(document.createParagraph().add(bold("\nHERHALEN, HERHALEN, HERHALEN")));
-		document.addInFlow(document.createParagraph()
-				.add("""
-						     Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het
-						     allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen
-						     aangelegd in je hersenen, waardoor je er steeds beter in wordt! In de eerste 20 minuten na
-						     het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft! Herhalen zorgt ervoor dat je
-						     minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je
-						     er én""".replace("\n", " ") + " ")
+		document.addInFlow(document.createParagraph().add("""
+				Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het \
+				allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen \
+				aangelegd in je hersenen, waardoor je er steeds beter in wordt! In de eerste 20 minuten na \
+				het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft! Herhalen zorgt ervoor dat je \
+				minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je \
+				er én\s""")
 				.add(italic("beter"))
 				.add(" in én ")
 				.add(italic("onthoudt"))
@@ -520,11 +520,9 @@ public class PlannerGenerator {
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
 				.add(bold("Hoe overleef ik het plannen?\n\u00A0").setFontSize(16)));
-		document.addInFlow(document.createParagraph()
-				.add("""
-						In deze agenda kun je voor jezelf een overzicht creëren van je moet doen, wanneer het af moet zijn,
-						en ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!
-						""".replace("\n", " ")));
+		document.addInFlow(document.createParagraph().add("""
+				In deze agenda kun je voor jezelf een overzicht creëren van je moet doen, wanneer het af moet zijn, \
+				 en ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!"""));
 		document.addInFlow(document.createParagraph()
 				.add("Hieronder staan de stappen voor het maken en uitvoeren van een planning. ")
 				.add("Deze stappen zijn belangrijk om in je achterhoofd te houden tijdens het plannen, lees ze " +
@@ -734,9 +732,13 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add("Wat is voor jou een fijn moment om je tas in te pakken?")
 		).addInFlow(blockWithLines);
+		document.addInFlow(document.createParagraph()
+				.add("Wat ga je anders doen dan met de vorige agenda? En wat ga je hetzelfde doen? Heb je nog tips " +
+				     "voor jezelf?")
+		).addInFlow(blockWithLines);
 	}
 
-	private void addHowToLearn(WritableDocument document) {
+	private void addHowToLearn(WritableDocument document) throws IOException {
 		LOGGER.debug("Adding how to learn");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
@@ -755,7 +757,7 @@ public class PlannerGenerator {
 		list.add("Probeer niet alles in 1x te leren, deel het leerwerk daarom op in kleine stukjes.");
 		list.add("Hoe vaker je “traint”, hoe sterker de verbindingen in je hersenen worden.");
 		list.add("""
-				Je kent de leerstof pas echt goed als je het zonder je boek of aantekeningen erbij kan \
+				Je kent de leerstof pas echt goed als je de stof zonder je boek of aantekeningen erbij kan \
 				opschrijven/uitspreken/vertellen. Bijvoorbeeld wanneer je wordt overhoord door iemand anders of het \
 				aan een medeleerling uitlegt.""");
 		list.add("""
@@ -781,11 +783,13 @@ public class PlannerGenerator {
 						Nederlandse en Engelse kaartjes en leg ze met de tekst naar beneden. Draai iedere keer 2 \
 						kaartjes om, wanneer je een match hebt (Nederlands + Engels kaartje) haal je de kaartjes uit \
 						het spel.""")));
+		Image rightArrowImage = document.loadSvgImageResource("/rightArrow.svg").setWidth(12).setHeight(8);
 		// noinspection SpellCheckingInspection
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Digitaal overhoorprogramma")).add(" (bv Slim stampen/Quizlet/Wozzol/Teach2000/blooket)")
 				.add("\nEr zijn online veel overhoorprogramma’s te vinden. Zorg ervoor dat je altijd alle " +
-				     "moeilijkheidsgraden doorloopt: onthouden → meerkeuze → spellen.")));
+				     "moeilijkheidsgraden doorloopt: ")
+				.add("onthouden ").add(rightArrowImage).add(" meerkeuze ").add(rightArrowImage).add(" spellen.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Leer groepjes met hetzelfde thema tegelijk"))
 				.add("\nWanneer je woorden groepeert die hetzelfde thema hebben, " +
@@ -797,13 +801,13 @@ public class PlannerGenerator {
 						woord. Hussel alle kaartjes door elkaar en bekijk de kaartjes 1 voor 1. Bedenk per kaartje wat \
 						het woord op de achterkant is. Je draait het kaartje om en je checkt of je het antwoord goed \
 						had. Maak stapeltjes wist ik/wist ik nog niet. Herhaal alle woorden die je nog niet wist nog \
-						een aantal keer. Om de flashcards een stapje moeilijker te maken kan je ook het woord wat op \
+						een aantal keer. Om de flashcards een stapje moeilijker te maken kan je ook het woord dat op \
 						de achterkant staat opschrijven op een blaadje. Zo oefen je meteen met het spellen van de \
 						woorden.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Voorbeeldzinnen verzinnen"))
 				.add("\nVerzin bij alle woorden uit de woordenlijst een nieuwe Engelse zin waaruit de betekenis van " +
-				     "het Engels woord duidelijk is.")));
+				     "het Engels woord blijkt.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Plaatjes/ezelsbruggetjes erbij verzinnen"))
 				.add("\nProbeer om ezelsbruggetjes of plaatjes te verzinnen bij de woordenlijst die je moet leren.")));
@@ -813,10 +817,129 @@ public class PlannerGenerator {
 				     "de Engelse woorden op te schrijven. Zo oefen je ook de spelling van de woorden.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Afdekmethode"))
-				.add("\nDek de Nederlandse/Engelse woordjes af met een blaadje. Bedenk ik je hoofd wat de vertaling " +
+				.add("\nDek de Nederlandse/Engelse woordjes af met een blaadje. Bedenk in je hoofd wat de vertaling " +
 				     "is, verschuif het papiertje en kijk of je het antwoord goed had. Je kan ook de woorden " +
 				     "opschrijven en de spelling controleren.")));
 		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold(
+				"Hoe leer ik OSA?:")
+				.setFontSize(16)));
+		document.addInFlow(document.createParagraph().add("""
+				Osa is geen gemakkelijk vak om te leren. Je krijgt heel veel informatie in een les en niet altijd \
+				letterlijke vragen die in de tekst staan tijdens een toets. Er wordt namelijk verwacht van je dat je \
+				de informatie kunt toepassen. Dit kan lastig zijn. Alleen doorlezen is in ieder geval niet voldoende! \
+				Hieronder een paar tips en trucs om je hopelijk te helpen."""));
+		document.addInFlow(document.createParagraph().add(bold("\nAardrijkskunde")));
+		//noinspection DuplicatedCode
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Lees de tekst nog een keer goed door.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Schrijf de dikgedrukte woorden over en schrijf de betekenis erachter.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Lees de tekst per alinea en schrijf in 1 of 2 zinnen op waar het stukje over gaat. \
+				Niet langer dan dit! Zo krijg je een korte samenvatting.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Bekijk alle bronnen goed (tekeningen, kaarten, afbeeldingen)! Kun je deze in je eigen woorden \
+				uitleggen?""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Pak je werkboek er ook bij. Als het goed is heb je alles gemaakt EN nagekeken. Lees de \
+				opdrachten nog een door en kijk vooral goed naar de opdrachten die je fout had!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Kijk ook nog eens naar de opdrachten in je werkboek waarbij je bronnen moet gebruiken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("In je werkboek is ook altijd een paragraaf met vaardigheden. Deze moet je ook leren!")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Als je in je werkboek kijkt, begin van het hoofdstuk staan dingen die je moet kunnen aan het einde van \
+				het hoofdstuk. Lees deze door en kijk voor jezelf of je dit allemaal kent en kunt. \
+				Zo niet, zoek dit dan op in je boek.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Zijn er aantekeningen gemaakt? Leer deze dan ook!")));
+		document.addInFlow(list);
+		document.addInFlow(document.createParagraph().add(bold("\nGeschiedenis")));
+		//noinspection DuplicatedCode
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Lees de tekst nog een keer goed door.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Schrijf de dikgedrukte woorden over en schrijf de betekenis erachter.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Lees de tekst per alinea en schrijf in 1 of 2 zinnen op waar het stukje over gaat. \
+				Niet langer dan dit! Zo krijg je een korte samenvatting.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Bekijk alle bronnen goed! Kun je deze in je eigen woorden uitleggen?")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Leer ALLE jaartallen die voorin het hoofdstuk staan, of je docent moet het anders aangeven!")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Kijk ook naar de voorgaande hoofdstukken. Welke tijdvakken kwamen ervoor en hoe heette de \
+				periodes?""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Pak je werkboek er ook bij. Als het goed is heb je alles gemaakt EN nagekeken. Lees de opdrachten nog \
+				een door en kijk vooral goed naar de opdrachten die je fout had!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Kijk ook nog eens naar de opdrachten in je werkboek waarbij je bronnen moet gebruiken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				In je werkboek staat achteraan iedere paragraaf een grijs blokje met daarin tips voor de toets. \
+				Kijk deze door en bekijk dan nogmaals de dingen die worden aangegeven.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Ieder hoofdstuk heeft een hoofdvraag en iedere paragraaf heeft een deelvraag. Kun je antwoord geven \
+				op deze vragen? Zo niet, lees dan alles nogmaals goed door!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Zijn er aantekeningen gemaakt? Leer deze dan ook!")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph()
+				.add(bold("Nog een paar andere manieren om te leren:").setFontSize(14)));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Kaartjesmethode\n")).add("""
+						Maak kleine kaartjes voor jezelf. Schrijf op de voorkant het begrip en op de achterkant de \
+						omschrijving van het begrip. Schud deze door elkaar en kijk hoeveel je er goed hebt! Herhaal \
+						dit totdat je ze allemaal kent.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Vragen maken\n")).add("""
+						Maak voor jezelf vragen die je een paar dagen van tevoren opschrijft. Schrijf op een apart \
+						blad de antwoorden en kijk of je ze na een paar dagen nog weet te beantwoorden! Dit kun je \
+						ook met andere klasgenootjes doen!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Filmpjes en afbeeldingen\n")).add("""
+						Zoek op internet filmpjes of afbeeldingen die je misschien kunt gebruiken. Maak er eventueel \
+						vragen bij voor jezelf. Op de website van SchoolTV kun je veel informatie over veel \
+						onderwerpen vinden en ook op YouTube.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Atlas\n")).add("""
+						Voor aardrijkskunde kun je ook nog eens door de atlas zoeken naar kaarten die met het \
+						onderwerp te maken hebben. Kun je de dingen die je geleerd hebt toepassen op dat kaartje? \
+						Wat zie je allemaal, en waar heeft het mee te maken?""")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold(
+				"Hoe leer ik Wiskunde?:")
+				.setFontSize(16)));
+		document.addInFlow(document.createParagraph().add("""
+				Wiskunde is een vak waar je niet altijd voor kunt leren. Soms zijn er begrippen die je moet kennen, \
+				deze kun je wel leren."""));
+		document.addInFlow(document.createParagraph().add("Belangrijke dingen om te doen zijn:"));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak aantekeningen in de les.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak een samenvatting van de stof.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Oefentoets Moderne wiskunde online maken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Diagnostische toets en/of de Herhaling-opdrachten in je boek maken + nakijken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Check dat de uitwerkingen in je schrift overeenkomen met het uitwerkingsmodel. \
+				Zo niet, check bij je docent of dat het klopt.""")));
+		document.addInFlow(list);
+		document.addInFlow(document.createParagraph().add("""
+				Als je niet nakijkt, dan maak je een invuloefening. En dan kun je NIET leren, want je weet niet \
+				wat je moet leren."""));
 
 		document.addInFlow(document.createParagraph());
 		document.addInFlow(document.createParagraph().add(bold(
@@ -851,16 +974,16 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
 				Om een goede samenvatting te kunnen schrijven is het belangrijk om te weten wat hoofd- en bijzaken \
 				zijn. In een goede samenvatting staan namelijk alleen maar hoofdzaken. De belangrijkste informatie in \
-				een tekst die wordt gegeven over het onderwerp noemen we hoofdzaken. Minder belangrijke informatie \
-				noemen we bijzaken."""));
+				een tekst die wordt gegeven over het onderwerp noemen we hoofdzaken. Minder belangrijke informatie, \
+				zoals voorbeelden, noemen we bijzaken."""));
 		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
 				Gebruik je eigen woorden. Ga dus niet telkens de belangrijkste zin uit de alinea letterlijk \
 				overschrijven. Als je het in je eigen woorden formuleert, heb je erover nagedacht!"""));
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
-				.add(bold("Stap 1: "))
-				.add("Streep de belangrijkste zinnen aan. Loop eerst de belangrijkste onderdelen van je tekst na: " +
-				     "inleiding en slot.")));
+				.add(bold("Stap 1: ")).add("""
+						Markeer de belangrijkste zinnen (of streep ze aan). Loop eerst de belangrijkste onderdelen van je \
+						tekst na: inleiding en slot.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Stap 2: ")).add("Orden je informatie.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
@@ -879,11 +1002,11 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph());
 		document.addInFlow(document.createParagraph().add(bold("Maakwerk:").setFontSize(16)));
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
-		list.add("Je maakwerk ook nakijken, zodat je weet of je de opdrachten goed hebt gedaan en snapt");
+		list.add("Je maakwerk ook nakijken, zodat je weet of je de opdrachten goed hebt gedaan en snapt.");
 		list.add("Als je gaat leren, ook je werkboek opdrachten doorlopen om te checken wat je fout had gedaan, " +
 		         "blijkbaar vond je dat moeilijk.");
 		list.add("Als opdrachten in de les zijn besproken dan is het ook handig om dat in je werkboek met een " +
-		         "uitroepteken aan te geven. Blijkbaar was dat een belangrijke vraag/vaardigheid enz.");
+		         "uitroepteken aan te geven. Blijkbaar was dat een belangrijke vraag/vaardigheid.");
 		document.addInFlow(list);
 
 		java.util.List<String> usefulWebsitesTitles = java.util.List.of(
@@ -908,7 +1031,7 @@ public class PlannerGenerator {
 				), java.util.List.of( // Engels
 						Map.entry("https://readtheory.org/", "")
 				), java.util.List.of( // Duits
-						Map.entry("https://www.duits.de/", ""),
+						Map.entry("https://www©.duits.de/", ""),
 						Map.entry("https://www.nubeterduits.nl/website/index.php?pag=1", ""),
 						Map.entry("https://deutsch-lernen.zum.de/wiki/Handlungsfelder", "")
 				), java.util.List.of( // Science
@@ -985,85 +1108,128 @@ public class PlannerGenerator {
 		// First heading: do not start with a newline (for the rest: do)
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik te laat kom?")));
 		document.addInFlow(document.createParagraph().add("""
-				Als je te laat op school bent of te laat voor een les, haal je altijd eerst een telaatbriefje bij de conciërges. Met zo'n
-				briefje mag jij de les in, of je nu geoorloofd te laat was of niet.
-				""".replace("\n", " ")));
+				Als je te laat op school bent of te laat voor een les, haal je altijd eerst een telaatbriefje bij de \
+				conciërges. Met zo'n briefje mag jij de les in, of je nu geoorloofd te laat was of niet. \
+				"""));
 
 		document.addInFlow(
 				document.createParagraph().add(bold("\nWat moet ik doen als ik naar de orthodontist/dokter moet?")));
 		document.addInFlow(document.createParagraph().add("""
-				Je ouders moeten voor de afspraak aan school laten weten welk lesuur je er niet bent.
-				Dat kan door te bellen, of ze geven je een briefje voor de conciërges mee met daarin waarom je welk lesuur niet aanwezig kunt zijn.
-				Dat briefje moet je dan voor de afspraak aan een van de conciërges geven.
-				""".replace("\n", " ")));
+				Je ouders moeten voor de afspraak aan school laten weten welk lesuur je er niet bent. \
+				Dat kan door te bellen, of ze geven je een briefje voor de conciërges mee met daarin waarom je welk \
+				lesuur niet aanwezig kunt zijn. \
+				Dat briefje moet je dan voor de afspraak aan een van de conciërges geven. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik ziek ben?")));
-		document.addInFlow(document.createParagraph()
-				.add("Als je ziek bent, dan bellen je ouders voor het eerste lesuur naar school om je ziek te melden" +
-				     ".\n\u00A0"));
+		document.addInFlow(document.createParagraph().add("""
+				Als je ziek bent, dan bellen je ouders voor het eerste lesuur naar school om je ziek te melden.
+				\u00A0"""));
 
 		document.addInFlow(document.createParagraph().add(bold("Wat moet ik doen als ik ziek naar huis wil?")));
 		document.addInFlow(document.createParagraph().add("""
-				Wanneer je je tijdens lestijd opeens niet lekker voelt, dan ga je naar je docent en geef je aan dat je naar huis wilt,
-				je meldt je daarna af bij de conciërges.
-				Als je thuis bent, laat je je ouders naar school bellen dat je weer veilig thuis bent.
-				""".replace("\n", " ")));
+				Wanneer je je tijdens schooltijd opeens niet lekker voelt, dan ga je naar je docent of mentor en geef \
+				je aan dat je naar huis wilt, je meldt je daarna af bij de conciërges. \
+				Als je thuis bent, laat je je ouders naar school bellen dat je weer veilig thuis bent. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nWat moet ik doen als ik een toets gemist heb?")));
 		document.addInFlow(document.createParagraph().add("""
-				Je geeft bij je vakdocent aan dat je een toets gemist hebt en vraagt de vakdocent wanneer je de toets kunt inhalen.
-				Je vakdocent zorgt dat er een inhaaltoets voor je klaar ligt in de mediatheek.
-				""".replace("\n", " ")));
+				Je geeft bij je vakdocent aan dat je een toets gemist hebt en vraagt de vakdocent wanneer je de toets \
+				kunt inhalen. Je vakdocent zorgt dat er een inhaaltoets voor je klaar ligt in de mediatheek."""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nNeem ik mijn jas en gymtas mee naar het lokaal?")));
 		document.addInFlow(document.createParagraph().add("""
-				Op Huizermaat heeft elke leerling een eigen kluisje. Hierin kun je je gymtas, je jas en je telefoon bewaren.
-				Tijdens de gymles bewaar je je chromebook en je telefoon in je kluisje.
-				""".replace("\n", " ")));
+				Op Huizermaat heeft elke leerling een eigen kluisje. Hierin kun je je gymtas, je jas en je telefoon \
+				bewaren. Tijdens de gymles bewaar je je chromebook en je telefoon in je kluisje. \
+				"""));
 
 		document.addInFlow(
 				document.createParagraph().add(bold("\nZijn alle gymlessen in de gymzalen van Huizermaat?")));
 		document.addInFlow(document.createParagraph().add("""
-				Nee, vanaf april tot aan de herfstvakantie gymmen we buiten op de sportvelden en de atletiekbaan,
-				op twee minuten van de school.
-				""".replace("\n", " ")));
+				Nee, vanaf april tot aan de herfstvakantie gymmen we buiten op de sportvelden en de atletiekbaan, \
+				op twee minuten van de school. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nGebruikt elke leerling een chromebook?")));
 		document.addInFlow(document.createParagraph().add("""
-				Ja, op Huizermaat gebruiken we een chromebook ter ondersteuning van het onderwijs; we gebruiken dus ook boeken.
-				Een chromebook lijkt op een laptop.
-				Vanaf de projectweek zullen we ze in de lessen gaan gebruiken en moet je dus altijd een opgeladen chromebook bij je hebben.
-				""".replace("\n", " ")));
+				Ja, op Huizermaat gebruiken we een chromebook ter ondersteuning van het onderwijs; we gebruiken dus \
+				ook boeken. Een chromebook lijkt op een laptop. \
+				Vanaf de projectweek zullen we ze in de lessen gaan gebruiken en moet je dus altijd een opgeladen \
+				chromebook bij je hebben. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nMag je je telefoon gebruiken tijdens de les?")));
 		document.addInFlow(document.createParagraph().add("""
-				Nee, tijdens de lessen bewaar je je telefoon, terwijl die uit is, in je kluis.
-				Een telefoon leidt immers veel te veel af van wat er tijdens de les gebeurt.
-				Als je internet nodig hebt voor een schoolopdracht, gebruik je je chromebook.
-				""".replace("\n", " ")));
+				Nee, tijdens de lessen bewaar je je telefoon, terwijl die uit is, in je kluis. \
+				Een telefoon leidt immers veel te veel af van wat er tijdens de les gebeurt. \
+				Als je internet nodig hebt voor een schoolopdracht, gebruik je je chromebook. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nWaarom geven we huiswerk?")));
 		document.addInFlow(document.createParagraph().add("""
-				We geven huiswerk omdat je dan nog eens rustig kunt oefenen met de stof die in de les is behandeld.
-				Of je maakt juist huiswerk om je voor te bereiden op de les die komen gaat.
-				We bouwen het rustig op. Na de herfstvakantie moet je rekenen op één à anderhalf uur per dag (ook in het weekend).
-				Als je goed meedoet tijdens de les, scheelt dat in wat je thuis moet doen. Op school kun je bovendien de docent of
-				medeleerlingen om hulp vragen. Het is vooral handig om leerwerk rustig thuis te doen.
-				""".replace("\n", " ")));
+				We geven huiswerk omdat je dan nog eens rustig kunt oefenen met de stof die in de les is behandeld. \
+				Of je maakt juist huiswerk om je voor te bereiden op de les die komen gaat. \
+				Reken op één à anderhalf uur per dag (ook in het weekend). \
+				Als je goed meedoet tijdens de les, scheelt dat in wat je thuis moet doen. Op school kun je bovendien \
+				de docent of medeleerlingen om hulp vragen. Het is vooral handig om leerwerk rustig thuis te doen. \
+				"""));
 
 		document.addInFlow(document.createParagraph().add(bold("\nWat zijn de afspraken in de leszone?")));
-		document.addInFlow(document.createParagraph().add("""
-				Zodra je door de klapdeuren een leszone in loopt, gelden de volgende afspraken:
-				""".replace("\n", " ")));
+		document.addInFlow(document.createParagraph().add(
+				"Zodra je door de klapdeuren een leszone in loopt, gelden de volgende afspraken:"));
 		List learningZoneRules = document.createList().setListSymbol(LIST_SYMBOL_HYPHEN_BULLET);
 		learningZoneRules.add("Je praat zachtjes en loopt rustig.");
 		learningZoneRules.add("Je hebt geen jas aan (deze ligt al in je kluis).");
 		learningZoneRules.add("Je hebt je telefoon niet bij je (deze ligt al in je kluis).");
-		learningZoneRules.add("Eten en drinken is niet toegestaan in de leszone (wel daarbuiten).");
+		learningZoneRules.add("Je eet en drinkt alleen buiten leszone.");
 		document.addInFlow(learningZoneRules);
 	}
 
-	@SuppressWarnings("SameParameterValue")
+	private void addGradeList(WritableDocument document) {
+		LOGGER.debug("Adding grade list");
+		document.startNewPage(false);
+		document.addInFlow(document.createParagraph()
+				.add(bold("Cijferlijst:\n").setFontSize(16)));
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph());
+
+		float gradeSize = mmToPt(10);
+		float headerPaddingTop = 4;
+		float headerPaddingBottom = 1;
+		float cellPadding = 11;
+		UnitValue[] columnWidths = new UnitValue[]{
+				UnitValue.createPointValue(mmToPt(50)),
+				// UnitValue.createPointValue(gradeSize),
+				// UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(gradeSize),
+				UnitValue.createPointValue(mmToPt(40))
+		};
+		Table table = new Table(columnWidths).useAllAvailableWidth().setFixedLayout().setPadding(0).setMargin(0)
+				.setMarginBottom(16);
+		table.addCell(document.createParagraph().add(bold("Vak"))
+				.setPaddings(headerPaddingTop, 0, headerPaddingBottom, 0));
+		for (int c = 0; c < columnWidths.length - 2; c++) {
+			table.addCell(emptyCell(document).setPaddingBottom(cellPadding));
+		}
+		table.addCell(document.createParagraph().add(bold("Eindcijfer"))
+				.setPaddings(headerPaddingTop, 0, headerPaddingBottom, 0));
+
+		for (int r = 0; r < 20; r++) {
+			for (int c = 0; c < columnWidths.length; c++) {
+				table.addCell(emptyCell(document).setPaddingBottom(cellPadding));
+			}
+		}
+		document.addInFlow(table);
+	}
+
 	private void addTimeSpentTables(WritableDocument document, int numberOfPages) {
 		LOGGER.debug("Adding {} time spent tables", numberOfPages);
 		for (int i = 0; i < numberOfPages; i++) {
