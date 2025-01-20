@@ -149,7 +149,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 							<addClasspath>true</addClasspath>
-							<mainClass>opwvhk.PlannerGeneratorLauncher</mainClass>
+							<mainClass>opwvhk.Launcher</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -171,7 +171,7 @@
 							<transformers>
 								<transformer implementation=
 										             "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>opwvhk.PlannerGeneratorLauncher</mainClass>
+									<mainClass>opwvhk.Launcher</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

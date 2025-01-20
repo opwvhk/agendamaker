@@ -1,11 +1,15 @@
-package opwvhk;
+package opwvhk.swing;
+
+import org.intellij.lang.annotations.MagicConstant;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.swing.*;
@@ -48,11 +52,20 @@ public abstract class DesktopApp {
 		return null;
 	}
 
-	private <T> List<T> loadIcons(Function<URL, T> iconLoader, String... iconResourceNames) {
+	protected <T> List<T> loadIcons(Function<URL, T> iconLoader, String... iconResourceNames) {
 		return Stream.of(iconResourceNames)
 				.map(icon -> requireNonNull(getClass().getResource(icon), () -> "Icon not found: " + icon))
 				.map(iconLoader)
 				.toList();
+	}
+
+	protected Font loadTrueTypeFont(String fontName,
+	                                @MagicConstant(flags = {Font.PLAIN, Font.BOLD, Font.ITALIC}) int fontStyle,
+	                                float fontSize) throws FontFormatException, IOException {
+		try (InputStream fontStream = getClass().getResourceAsStream("/" + fontName + ".ttf")) {
+			Font font = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(fontStream, "Cannot find font"));
+			return font.deriveFont(fontStyle, fontSize);
+		}
 	}
 
 	protected void openFile(File file) throws IOException {

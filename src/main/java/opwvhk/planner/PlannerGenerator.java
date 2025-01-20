@@ -87,31 +87,24 @@ public class PlannerGenerator {
 
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
-			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
-					// 2, 0, 0, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
-					2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
-					EnumSet.of(
-							StaticPage.EMERGENCY_PLAN,
-							StaticPage.SCHEDULE_AND_VACATIONS,
-							StaticPage.SURVIVE_FRESHMAN_YEAR,
-							StaticPage.PLANNING_HAND,
-							// StaticPage.SURVIVE_LEARNING,
-							StaticPage.USEFUL_STUFF,
-							StaticPage.STUDYING_TIPS,
-							StaticPage.HOW_TO_LEARN,
-							StaticPage.PREREQUISITES_LEARNING,
-							StaticPage.PLANNING_INSTRUCTIONS,
-							StaticPage.PERSONAL_GOALS,
-							StaticPage.GRADE_LIST
-					),
-					new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
-					new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
-					new DateTitle(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie"),
-					new DateTitle(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag"),
-					new DateTitle(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag"),
-					new DateTitle(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie"),
-					new DateTitle(LocalDate.of(2025, JANUARY, 6), ""),
+			java.util.List<DateTitle> dateTitleList = new ArrayList<>();
+			// dateTitleList.addAll(java.util.List.of(
+			// 		// Order doesn't matter... so start with the first & last dates.
+			// 		new DateTitle(LocalDate.of(2024, SEPTEMBER, 2), ""),
+			// 		new DateTitle(LocalDate.of(2025, FEBRUARY, 6), ""),
+			// 		new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
+			// 		new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
+			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie"),
+			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag"),
+			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag"),
+			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie"),
+			// 		new DateTitle(LocalDate.of(2025, JANUARY, 6), "")
+			// ));
+			//noinspection CollectionAddAllCanBeReplacedWithConstructor
+			dateTitleList.addAll(java.util.List.of(
+					// Order doesn't matter... so start with the first & last dates.
 					new DateTitle(LocalDate.of(2025, FEBRUARY, 6), ""),
+					new DateTitle(LocalDate.of(2025, JULY, 19), "Zomervakantie"),
 					new DateTitle(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie"),
 					new DateTitle(LocalDate.of(2025, FEBRUARY, 24), ""),
 					new DateTitle(LocalDate.of(2025, APRIL, 19), "Meivakantie"),
@@ -127,9 +120,29 @@ public class PlannerGenerator {
 					new DateTitle(LocalDate.of(2025, JUNE, 8), "1e Pinksterdag"),
 					new DateTitle(LocalDate.of(2025, JUNE, 9), "2e Pinksterdag"),
 					new DateTitle(LocalDate.of(2025, JUNE, 10), ""),
-					new DateTitle(LocalDate.of(2025, JULY, 12), "Zomervakantie"),
-					new DateTitle(LocalDate.of(2025, JULY, 19), "Zomervakantie"),
-					new DateTitle(LocalDate.of(2024, SEPTEMBER, 2), "") // Order doesn't matter...
+					new DateTitle(LocalDate.of(2025, JULY, 12), "Zomervakantie")
+			));
+			// PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
+			// 		2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
+			// 		EnumSet.of(
+			// 				StaticPage.EMERGENCY_PLAN,
+			// 				StaticPage.SCHEDULE_AND_VACATIONS,
+			// 				StaticPage.SURVIVE_FRESHMAN_YEAR,
+			// 				StaticPage.PLANNING_HAND,
+			// 				// StaticPage.SURVIVE_LEARNING,
+			// 				StaticPage.USEFUL_STUFF,
+			// 				StaticPage.STUDYING_TIPS,
+			// 				StaticPage.HOW_TO_LEARN,
+			// 				StaticPage.PREREQUISITES_LEARNING,
+			// 				StaticPage.PLANNING_INSTRUCTIONS,
+			// 				StaticPage.PERSONAL_GOALS,
+			// 				StaticPage.GRADE_LIST
+			// 		),
+			// 		dateTitleList
+			// );
+			PlannerDescription plannerDescription = new PlannerDescription("", "Florentine",
+					2, 0, 0, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
+					EnumSet.noneOf(StaticPage.class), dateTitleList
 			);
 			new PlannerGenerator(plannerDescription).generate(output);
 		}
@@ -137,8 +150,8 @@ public class PlannerGenerator {
 	}
 
 	/**
-	 * Logger for this class.
-	 */
+     * Logger for this class.
+     */
 	private static final Logger LOGGER = LoggerFactory.getLogger(PlannerGenerator.class.getName());
 
 	private static final Locale LOCALE = Locale.forLanguageTag("nl-NL");
@@ -148,15 +161,15 @@ public class PlannerGenerator {
 	private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE: d", LOCALE);
 	private static final DateTimeFormatter WEEKDAY_FORMAT = DateTimeFormatter.ofPattern("EEEE", LOCALE);
 	/**
-	 * The description of the planner to generate.
-	 */
+     * The description of the planner to generate.
+     */
 	private final PlannerDescription plannerDescription;
 
 	/**
-	 * Create a planner generator.
-	 *
-	 * @param plannerDescription a description of the planner to generate
-	 */
+     * Create a planner generator.
+     *
+     * @param plannerDescription a description of the planner to generate
+     */
 	public PlannerGenerator(PlannerDescription plannerDescription) {
 		java.util.List<DateTitle> dateTitles = new ArrayList<>(plannerDescription.dateTitles());
 
@@ -180,12 +193,12 @@ public class PlannerGenerator {
 	}
 
 	/**
-	 * Generate a week planner into an {@link OutputStream}.
-	 *
-	 * @param output the stream to write to
-	 * @throws IOException  when the planner cannot be written
-	 * @throws PdfException when the planner cannot be generated
-	 */
+     * Generate a week planner into an {@link OutputStream}.
+     *
+     * @param output the stream to write to
+     * @throws IOException  when the planner cannot be written
+     * @throws PdfException when the planner cannot be generated
+     */
 	public void generate(OutputStream output) throws IOException, PdfException {
 		float topBottomMargin = mmToPt(20);
 		float margin = mmToPt(20);
@@ -195,36 +208,35 @@ public class PlannerGenerator {
 	}
 
 	/**
-	 * Generate a week planner into a {@link PdfDocument}.
-	 *
-	 * @param document the document to write to
-	 * @throws IOException  when the planner cannot be written
-	 * @throws PdfException when the planner cannot be generated
-	 */
+     * Generate a week planner into a {@link PdfDocument}.
+     *
+     * @param document the document to write to
+     * @throws IOException  when the planner cannot be written
+     * @throws PdfException when the planner cannot be generated
+     */
 	public void generate(WritableDocument document) throws IOException, PdfException {
-		document.addEventHandler(PdfDocumentEvent.END_PAGE, event -> {
-			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
-			document.draw(docEvent, (canvas, area) -> {
-				int pageNumber = docEvent.getDocument().getPageNumber(docEvent.getPage());
-				if (pageNumber == 1) {
-					return;
-				}
-
-				int fontSize = 10;
-				float centerX = (area.getLeft() + area.getRight()) / 2;
-				float footerY = area.getBottom() - fontSize * 2.1f;
-				canvas.setFontSize(fontSize);
-				canvas.showTextAligned(String.valueOf(pageNumber), centerX, footerY, CENTER);
-			});
-		});
-
-		if (plannerDescription.staticPages().isEmpty()) {
-			document.drawFullPage(drawFullPageImage("/page_front.jpg"));
-			document.startNewPage(false);
-			document.startNewPage(true);
+		if (!plannerDescription.title().isEmpty()) {
+			// Generate the entire planner (content created for Huizermaat)
+			generateFullPlanner(document);
+		} else if ("Florentine".equals(plannerDescription.subtitle())) {
+			// For Florentine
+			generatePlannerForFlorentine(document);
 		} else {
-			addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle());
+			// Planner only
+			generatePlanningWeeks(document);
 		}
+	}
+
+	/**
+     * Generate a week planner with additional stuff into a {@link PdfDocument}.
+     *
+     * @param document the document to write to
+     * @throws IOException  when the planner cannot be written
+     * @throws PdfException when the planner cannot be generated
+     */
+	public void generateFullPlanner(WritableDocument document) throws IOException, PdfException {
+		addPageNumbersFromPage2(document);
+		addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle());
 
 		if (plannerDescription.staticPages().contains(StaticPage.EMERGENCY_PLAN)) {
 			addEmergencyPlan(document);
@@ -265,8 +277,8 @@ public class PlannerGenerator {
 		 */
 		boolean addPlanningInstructions = plannerDescription.staticPages().contains(StaticPage.PLANNING_INSTRUCTIONS);
 		boolean addPersonalGoals = plannerDescription.staticPages().contains(StaticPage.PERSONAL_GOALS);
-		int numberOfPagesWrittenTo1 = document.numberOfPagesWrittenTo();
-		int pagesBeforePlanner = numberOfPagesWrittenTo1 + plannerDescription.timeTablePages() +
+		int numberOfPagesWrittenTo = document.numberOfPagesWrittenTo();
+		int pagesBeforePlanner = numberOfPagesWrittenTo + plannerDescription.timeTablePages() +
 		                         (addPlanningInstructions ? 1 : 0) + (addPersonalGoals ? 1 : 0);
 		int extraTimetablePages = 1 - pagesBeforePlanner % 2; // the # of pages before the planner must be odd.
 		addTimeSpentTables(document, plannerDescription.timeTablePages() + extraTimetablePages);
@@ -280,7 +292,78 @@ public class PlannerGenerator {
 		}
 
 		// No page numbers beyond this point.
+		startNextPageAndDropSubsequentPageNumbers(document);
+
+		addPlanningWeeks(document, plannerDescription.numClasses(), plannerDescription.sortedDateTitles());
+
+		addNotesAndMindmapPages(document);
+
+		document.startNewPage(true);
+		document.startNewPage(true);
+		// Nearly blank back page
+		Paragraph closingRemarks = document
+				.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
+				.setTextAlignment(RIGHT)
+				.add("Gemaakt naar ontwerp van de Huizermaat");
+		Rectangle pageArea = document.getEffectiveArea();
+		document.addInFlow(
+				closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
+	}
+
+	private static void addPageNumbersFromPage2(WritableDocument document) {
+		document.addEventHandler(PdfDocumentEvent.END_PAGE, event -> {
+			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+			document.draw(docEvent, (canvas, area) -> {
+				int pageNumber = docEvent.getDocument().getPageNumber(docEvent.getPage());
+				if (pageNumber == 1) {
+					return;
+				}
+
+				int fontSize = 10;
+				float centerX = (area.getLeft() + area.getRight()) / 2;
+				float footerY = area.getBottom() - fontSize * 2.1f;
+				canvas.setFontSize(fontSize);
+				canvas.showTextAligned(String.valueOf(pageNumber), centerX, footerY, CENTER);
+			});
+		});
+	}
+
+	private static void startNextPageAndDropSubsequentPageNumbers(WritableDocument document) {
 		document.removeEventHandlers(PdfDocumentEvent.END_PAGE);
+		document.startNewPage(true); // Needed because all pages have been flushed.
+	}
+
+	private void addNotesAndMindmapPages(WritableDocument document) {
+		addNotesPages(document, plannerDescription.notesPages());
+
+		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are
+		// missing (0-3).
+		// The formula purposefully comes up two pages short to accommodate the back cover.
+		int numberOfPagesWrittenTo = document.numberOfPagesWrittenTo();
+		int expectedTotalNumberOfPages = numberOfPagesWrittenTo + plannerDescription.mindmapPages() + 2;
+		int extraMindmapPages = 3 - (expectedTotalNumberOfPages - 1) % 4;
+		addMindMapPages(document, plannerDescription.mindmapPages() + extraMindmapPages);
+	}
+
+	/**
+     * Generate a week planner with special front and back pages into a {@link PdfDocument}.
+     *
+     * @param document the document to write to
+     * @throws IOException  when the planner cannot be written
+     * @throws PdfException when the planner cannot be generated
+     */
+	public void generatePlannerForFlorentine(WritableDocument document) throws IOException, PdfException {
+		document.drawFullPage(drawFullPageImage("/page_front.jpg"));
+		document.startNewPage(false);
+		document.startNewPage(true);
+
+		/*
+		 * The week planing pages must start on a left-hand page (i.e., an even numbered page) to ensure pages open
+		 * with a full week in view. Add an extra timetable page to ensure the number of pages before is odd.
+		 */
+		int extraTimetablePages = 1 - plannerDescription.timeTablePages() % 2;
+		addTimeSpentTables(document, plannerDescription.timeTablePages() + extraTimetablePages);
+
 		document.startNewPage(true); // Needed because all pages have been flushed.
 
 		addPlanningWeeks(document, plannerDescription.numClasses(), plannerDescription.sortedDateTitles());
@@ -288,27 +371,29 @@ public class PlannerGenerator {
 		addNotesPages(document, plannerDescription.notesPages());
 
 		// The result must be printable as a booklet, which means a fourfold number of pages. Calculate how many are
-		// missing (0-3).
-		// The formula purposefully comes up two pages short to accommodate the back cover.
-		int numberOfPagesWrittenTo2 = document.numberOfPagesWrittenTo();
-		int expectedTotalNumberOfPages = numberOfPagesWrittenTo2 + plannerDescription.mindmapPages() + 2;
+		// missing (0-3). The formula purposefully comes up two pages short to accommodate the back cover.
+		int numberOfPagesWrittenTo = document.numberOfPagesWrittenTo();
+		int expectedTotalNumberOfPages = numberOfPagesWrittenTo + plannerDescription.mindmapPages() + 2;
 		int extraMindmapPages = 3 - (expectedTotalNumberOfPages - 1) % 4;
 		addMindMapPages(document, plannerDescription.mindmapPages() + extraMindmapPages);
 
 		document.startNewPage(true);
 		document.startNewPage(true);
-		if (plannerDescription.staticPages().isEmpty()) {
-			document.drawFullPage(drawFullPageImage("/page_back.jpg"));
-		} else {
-			// Nearly blank back page
-			Paragraph closingRemarks = document
-					.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
-					.setTextAlignment(RIGHT)
-					.add("Gemaakt naar ontwerp van de Huizermaat");
-			Rectangle pageArea = document.getEffectiveArea();
-			document.addInFlow(
-					closingRemarks.setFixedPosition(pageArea.getLeft(), pageArea.getBottom(), pageArea.getWidth()));
-		}
+		document.drawFullPage(drawFullPageImage("/page_back.jpg"));
+	}
+
+	/**
+     * Generate week planner pages into a {@link PdfDocument}.
+     *
+     * @param document the document to write to
+     * @throws IOException  when the planner cannot be written
+     * @throws PdfException when the planner cannot be generated
+     */
+	public void generatePlanningWeeks(WritableDocument document) throws IOException, PdfException {
+		// Contrary to the other planners, this planner is not a complete, ready-to-print document.
+		// So we do not ensure the planner starts at an even-numbered page.
+		// document.startNewPage(true); // Needed because all pages have been flushed.
+		addPlanningWeeks(document, plannerDescription.numClasses(), plannerDescription.sortedDateTitles());
 	}
 
 	BiConsumer<Canvas, Rectangle> drawFullPageImage(String pageImageResource) {
@@ -444,9 +529,9 @@ public class PlannerGenerator {
 				Voor je ligt de planagenda. In deze agenda kun je voor jezelf overzicht creëren in wat wanneer af moet \
 				zijn, maar ook wanneer je het af gaat maken. Zo ben je goed georganiseerd!"""));
 		document.addInFlow(document.createParagraph().add("""
-				Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het \
-				leren opgesteld. Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, \
-				lees ze daarom maar goed door.""")
+						Voordat je aan de slag kunt gaan met het plannen, staan hieronder nog een aantal voorwaarden voor het \
+						leren opgesteld. Deze voorwaarden zijn belangrijk om in je achterhoofd te houden tijdens het plannen, \
+						lees ze daarom maar goed door.""")
 				.add("\n\u00A0"));
 
 		float indent = mmToPt(10);
@@ -490,12 +575,12 @@ public class PlannerGenerator {
 
 		document.addInFlow(document.createParagraph().add(bold("\nHERHALEN, HERHALEN, HERHALEN")));
 		document.addInFlow(document.createParagraph().add("""
-				Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het \
-				allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen \
-				aangelegd in je hersenen, waardoor je er steeds beter in wordt! In de eerste 20 minuten na \
-				het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft! Herhalen zorgt ervoor dat je \
-				minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je \
-				er én\s""")
+						Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het \
+						allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen \
+						aangelegd in je hersenen, waardoor je er steeds beter in wordt! In de eerste 20 minuten na \
+						het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft! Herhalen zorgt ervoor dat je \
+						minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je \
+						er én\s""")
 				.add(italic("beter"))
 				.add(" in én ")
 				.add(italic("onthoudt"))
@@ -832,7 +917,7 @@ public class PlannerGenerator {
 				de informatie kunt toepassen. Dit kan lastig zijn. Alleen doorlezen is in ieder geval niet voldoende! \
 				Hieronder een paar tips en trucs om je hopelijk te helpen."""));
 		document.addInFlow(document.createParagraph().add(bold("\nAardrijkskunde")));
-		//noinspection DuplicatedCode
+		// noinspection DuplicatedCode
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add("Lees de tekst nog een keer goed door.")));
@@ -859,7 +944,7 @@ public class PlannerGenerator {
 				.add("Zijn er aantekeningen gemaakt? Leer deze dan ook!")));
 		document.addInFlow(list);
 		document.addInFlow(document.createParagraph().add(bold("\nGeschiedenis")));
-		//noinspection DuplicatedCode
+		// noinspection DuplicatedCode
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add("Lees de tekst nog een keer goed door.")));
@@ -1082,8 +1167,8 @@ public class PlannerGenerator {
 				"Duits", "x (soms als extra)", "x", "", "",
 				"Science (bio)", "", "x", "x", "https://biologiepagina.nl/",
 				"Science (nask)", "", "x", "x", "",
-				"ODSA (ak)", "", "", "", "",
-				"ODSA (ges)", "", "x", "x", "",
+				"OSA (ak)", "", "", "", "",
+				"OSA (ges)", "", "x", "x", "",
 				"Wiskunde", "x", "x", "x", ""
 		)) {
 			table.addCell(createCell(document, 1, TextAlignment.LEFT, p -> {
@@ -1467,10 +1552,10 @@ public class PlannerGenerator {
 	}
 
 	/**
-	 * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell
-	 * border. The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left
-	 * borders respectively.
-	 */
+     * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell
+     * border. The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left
+     * borders respectively.
+     */
 	private Cell b(int nibble, Cell element) {
 		if ((nibble & 0b00001000) == 0) {
 			element.setBorderTop(Border.NO_BORDER);

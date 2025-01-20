@@ -9,10 +9,17 @@ import opwvhk.planner.DateTitle;
 import opwvhk.planner.PlannerDescription;
 import opwvhk.planner.PlannerGenerator;
 import opwvhk.planner.StaticPage;
+import opwvhk.swing.DesktopApp;
+import opwvhk.swing.FormBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,16 +32,17 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntFunction;
 import java.util.prefs.Preferences;
 import java.util.stream.IntStream;
@@ -44,27 +52,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import static opwvhk.planner.ClassItemStructure.CLASS_ROOM_DOUBLE;
 import static opwvhk.planner.ClassItemStructure.CLASS_ROOM_SINGLE;
-import static opwvhk.planner.ClassItemStructure.CLASS_ROOM_TRIPLE;
-import static opwvhk.planner.ClassItemStructure.SINGLE_FIELD;
-import static opwvhk.planner.StaticPage.EMERGENCY_PLAN;
-import static opwvhk.planner.StaticPage.HOW_TO_LEARN;
-import static opwvhk.planner.StaticPage.PERSONAL_GOALS;
-import static opwvhk.planner.StaticPage.PLANNING_HAND;
-import static opwvhk.planner.StaticPage.PLANNING_INSTRUCTIONS;
-import static opwvhk.planner.StaticPage.PREREQUISITES_LEARNING;
-import static opwvhk.planner.StaticPage.SCHEDULE_AND_VACATIONS;
-import static opwvhk.planner.StaticPage.STUDYING_TIPS;
-import static opwvhk.planner.StaticPage.SURVIVE_FRESHMAN_YEAR;
-import static opwvhk.planner.StaticPage.SURVIVE_LEARNING;
-import static opwvhk.planner.StaticPage.USEFUL_STUFF;
 
-public class PlannerGeneratorLauncher extends DesktopApp {
+public class Launcher extends DesktopApp {
 	public static final String APPLICATION_NAME = "Agendamaker";
-	private static final EnumMap<ClassItemStructure, String> CLASS_ITEM_STRUCTURES = new EnumMap<>(
-			ClassItemStructure.class);
-	private static final EnumMap<StaticPage, String> STATIC_PAGES = new EnumMap<>(StaticPage.class);
 	private static final Locale LOCALE = Locale.forLanguageTag("NL-nl");
 	private static final String DATE_FORMAT_PATTERN = "d MMM yyyy";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT_PATTERN)
@@ -74,44 +65,20 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
 	private static final String ERROR_TITLE = "Oeps... vraag een programmeur...";
 
-	static {
-		CLASS_ITEM_STRUCTURES.put(SINGLE_FIELD, "Enkel vak");
-		CLASS_ITEM_STRUCTURES.put(CLASS_ROOM_SINGLE, "Vak & 1 regel");
-		CLASS_ITEM_STRUCTURES.put(CLASS_ROOM_DOUBLE, "Vak & 2 regels");
-		CLASS_ITEM_STRUCTURES.put(CLASS_ROOM_TRIPLE, "Vak & 3 regels");
-		STATIC_PAGES.put(EMERGENCY_PLAN, "Noodplan");
-		STATIC_PAGES.put(SCHEDULE_AND_VACATIONS, "Lestijden en vakanties");
-		STATIC_PAGES.put(SURVIVE_FRESHMAN_YEAR, "Hoe overleef ik de brugklas");
-		STATIC_PAGES.put(PLANNING_HAND, "De hand-vragen");
-		STATIC_PAGES.put(SURVIVE_LEARNING, "Hoe overleef ik leren?");
-		STATIC_PAGES.put(USEFUL_STUFF, "Handige afkortingen en zo");
-		STATIC_PAGES.put(STUDYING_TIPS, "Studietips");
-		STATIC_PAGES.put(HOW_TO_LEARN, "Voor je begint met leren");
-		STATIC_PAGES.put(PREREQUISITES_LEARNING, "Voorwaarden voor leren");
-		STATIC_PAGES.put(PLANNING_INSTRUCTIONS, "Hoe overleef ik het plannen?");
-		STATIC_PAGES.put(PERSONAL_GOALS, "Persoonlijke doelen");
-	}
-
-	public static void main(String[] args) {
-		new PlannerGeneratorLauncher().start();
+	public static void main(String[] args) throws IOException, FontFormatException {
+		new Launcher().start();
 	}
 
 	private final Preferences lastUsedSettings;
 
 	private JSpinner startDateSpinner;
 	private JSpinner endDateSpinner;
-	private JTextField titleField;
-	private JTextField subtitleField;
-	private JSpinner timetablesSpinner;
-	private JSpinner notePagesSpinner;
-	private JSpinner mindmapPagesSpinner;
 	private JSpinner numClassesSpinner;
-	private JComboBox<ClassItemStructure> classItemStructureComboBox;
-	private JCheckBox[] staticPagesCheckBoxes;
+	private AtomicReference<ClassItemStructure> selectedClassItemStructure;
 	private JTable dateTitlesTable;
 	private JFrame mainWindow;
 
-	public PlannerGeneratorLauncher() {
+	public Launcher() {
 		super(APPLICATION_NAME, "/icons/schedule2_64.png", "/icons/schedule2_16.png", "/icons/schedule2_24.png",
 				"/icons/schedule2_32.png", "/icons/schedule2_128.png", "/icons/schedule2_256.png");
 		Preferences preferences = Preferences.userNodeForPackage(getClass());
@@ -126,53 +93,74 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 				""";
 	}
 
-	@SuppressWarnings("GrazieInspection")
-	public void start() {
+	public void start() throws IOException, FontFormatException {
 		JLabel header = new JLabel(APPLICATION_NAME);
-		// noinspection SpellCheckingInspection
-		header.setFont(new Font("Snell Roundhand", Font.BOLD, 36));
+
+		header.setFont(loadTrueTypeFont("Caveat-Regular", Font.BOLD, (float) 36));
 		header.setHorizontalAlignment(SwingConstants.CENTER);
 		header.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
 
-		// noinspection SpellCheckingInspection
-		JPanel buttonPanel = new JPanel(new MigLayout("nogrid, fillx, aligny 100%, gapy unrel"));
-		// The above layout is for a button bar; these tags help with platform dependent ordering:
-		// The tags: ok, cancel, help (usually on the right), help2 (sometimes placed left), yes, no, apply, next,
-		// back, finish, left (normally placed far left).
-		JButton generatePlannerButton = new JButton("Maak PDF");
-		generatePlannerButton.addActionListener(this::generatePlanner);
-		buttonPanel.add(generatePlannerButton, "tag finish");
-		JButton saveButton = new JButton("Bewaar invoer");
-		saveButton.addActionListener(e -> System.out.println(createPlannerDescription(e)));
-		buttonPanel.add(saveButton, "tag apply");
+		JButton generatePlannerButton = createButton("Maak PDF", this::generatePlanner);
+		JButton saveButton = createButton("Bewaar invoer", e -> System.out.println(createPlannerDescription(e)));
+
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		buttonPanel.add(saveButton);
+		buttonPanel.add(generatePlannerButton);
 
 		JPanel mainInputPanel = createMainInputPanel();
-
-		JPanel staticPagesPanel = createStaticPagesPanel();
-
 		JComponent dateTitlesPanel = createDateTitlesPanel();
-
-		JPanel content = new JPanel(new MigLayout());
-		content.add(mainInputPanel);
-		content.add(dateTitlesPanel, "grow, push, span 1 2, wrap");
-		content.add(staticPagesPanel);
+		Box content = hbox(vbox(mainInputPanel, Box.createVerticalGlue()), dateTitlesPanel);
+		mainInputPanel.setMinimumSize(mainInputPanel.getPreferredSize());
+		mainInputPanel.setMaximumSize(mainInputPanel.getPreferredSize());
 
 		// Build and display the window
 
 		mainWindow = createMainWindow();
-		mainWindow.setLocationRelativeTo(null); // Center on screen
+		// mainWindow.setLocationRelativeTo(null); // Center on screen
 		// noinspection SpellCheckingInspection
 		mainWindow.getRootPane().putClientProperty("apple.awt.fullscreenable", true);
 		BorderLayout mainWindowLayout = new BorderLayout();
-		mainWindowLayout.setHgap(8);
-		mainWindowLayout.setVgap(8);
 		mainWindow.setLayout(mainWindowLayout);
 		mainWindow.add(header, BorderLayout.NORTH);
 		mainWindow.add(content, BorderLayout.CENTER);
 		mainWindow.add(buttonPanel, BorderLayout.SOUTH);
+
+		ensureMinimumSize(mainWindow);
 		mainWindow.pack();
-		mainWindow.setMinimumSize(mainWindow.getPreferredSize());
 		mainWindow.setVisible(true);
+	}
+
+	private static void ensureMinimumSize(JFrame frame) {
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				Rectangle bounds = frame.getBounds();
+				Dimension minSize = frame.getMinimumSize();
+				if (bounds.width < minSize.width) {
+					bounds.width = minSize.width;
+				}
+				if (bounds.height < minSize.height) {
+					bounds.height = minSize.height;
+				}
+				frame.setBounds(bounds); // Won't repaint unless it is resized and/or moved
+			}
+		});
+	}
+
+	private static Box vbox(Component... components) {
+		Box box = Box.createVerticalBox();
+		for (Component component : components) {
+			box.add(component);
+		}
+		return box;
+	}
+
+	private static Box hbox(Component... components) {
+		Box box = Box.createHorizontalBox();
+		for (Component component : components) {
+			box.add(component);
+		}
+		return box;
 	}
 
 	private @NotNull JPanel createMainInputPanel() {
@@ -191,12 +179,13 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 			LocalDate[] period = correctPeriod(new LocalDate[]{startDate, endDate});
 			if (!startDate.equals(period[0]) || !endDate.equals(period[1])) {
 				actualPlannerPeriodLabel.setText(
-						"(%s t/m %s)".formatted(DATE_FORMATTER.format(period[0]), DATE_FORMATTER.format(period[1])));
+						"(%s t/m %s)".formatted(DATE_FORMATTER.format(period[0]),
+								DATE_FORMATTER.format(period[1])));
 			} else {
 				actualPlannerPeriodLabel.setText("");
 			}
 		};
-		plannerPeriodChangeListener.stateChanged(null); // Set label
+		plannerPeriodChangeListener.stateChanged(null); // Set initial label
 		startDateSpinner.addChangeListener(
 				e -> ((SpinnerDateModel) endDateSpinner.getModel()).setStart((Date) startDateSpinner.getValue()));
 		startDateSpinner.addChangeListener(plannerPeriodChangeListener);
@@ -204,124 +193,84 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 				e -> ((SpinnerDateModel) startDateSpinner.getModel()).setEnd((Date) endDateSpinner.getValue()));
 		endDateSpinner.addChangeListener(plannerPeriodChangeListener);
 
-		titleField = new JTextField(lastUsedSettings.get("title", null));
-		subtitleField = new JTextField(lastUsedSettings.get("subtitle", null));
-		timetablesSpinner = new JSpinner(new SpinnerNumberModel(lastUsedSettings.getInt("timetables", 2), 0, 99, 1));
-		notePagesSpinner = new JSpinner(new SpinnerNumberModel(lastUsedSettings.getInt("notesPages", 3), 0, 99, 1));
-		mindmapPagesSpinner = new JSpinner(
-				new SpinnerNumberModel(lastUsedSettings.getInt("mindmapPages", 3), 0, 99, 1));
 		numClassesSpinner = new JSpinner(new SpinnerNumberModel(lastUsedSettings.getInt("numClasses", 7), 3, 10, 1));
-		ComboBoxModel<ClassItemStructure> comboBoxModel = new DefaultComboBoxModel<>(ClassItemStructure.values());
-		comboBoxModel.setSelectedItem(
-				ClassItemStructure.valueOf(lastUsedSettings.get("classItemStructure", CLASS_ROOM_SINGLE.name())));
-		classItemStructureComboBox = new JComboBox<>(comboBoxModel);
-		classItemStructureComboBox.setRenderer(new DefaultListCellRenderer() {
-			public Component getListCellRendererComponent(JList<?> list,
-			                                              Object value,
-			                                              int index,
-			                                              boolean isSelected,
-			                                              boolean cellHasFocus) {
-				ClassItemStructure cis = (ClassItemStructure) value;
-				value = CLASS_ITEM_STRUCTURES.getOrDefault(cis, cis.name());
-				return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-			}
-		});
-
-		JPanel mainInputPanel = new JPanel(new MigLayout());
-		mainInputPanel.setBorder(BorderFactory.createTitledBorder("Titel en layout"));
-		JLabel label8 = new JLabel("Startdatum");
-		mainInputPanel.add(label8, "sg dateLabels");
-		mainInputPanel.add(startDateSpinner, "sg dateSpinners");
-		JLabel label7 = new JLabel("Einddatum");
-		mainInputPanel.add(label7, "sg dateLabels, gap unrelated");
-		mainInputPanel.add(endDateSpinner, "sg dateSpinners, wrap");
-		JLabel label6 = new JLabel("Titel");
-		mainInputPanel.add(label6);
-		mainInputPanel.add(titleField, "span, grow, wrap");
-		JLabel label5 = new JLabel("Ondertitel");
-		mainInputPanel.add(label5);
-		mainInputPanel.add(subtitleField, "span, grow, wrap");
-		JLabel label4 = new JLabel("Tijdtabellen");
-		mainInputPanel.add(label4);
-		mainInputPanel.add(timetablesSpinner);
-		JLabel label3 = new JLabel("Aantal lesuren");
-		mainInputPanel.add(label3, "gap unrelated");
-		mainInputPanel.add(numClassesSpinner, "wrap");
-		JLabel label2 = new JLabel("Notitie-pagina's");
-		mainInputPanel.add(label2);
-		mainInputPanel.add(notePagesSpinner);
-		JLabel label1 = new JLabel("Structuur");
-		mainInputPanel.add(label1, "gap unrelated");
-		mainInputPanel.add(classItemStructureComboBox, "wrap");
-		JLabel label = new JLabel("Mindmap-pagina's");
-		mainInputPanel.add(label);
-		mainInputPanel.add(mindmapPagesSpinner);
-		mainInputPanel.add(actualPlannerPeriodLabel, "span");
-		return mainInputPanel;
-	}
-
-	private @NotNull JPanel createStaticPagesPanel() {
-		// noinspection GrazieInspection
-		long defaultStaticPages = asBitSet(EnumSet.of(
-				EMERGENCY_PLAN,
-				SCHEDULE_AND_VACATIONS,
-				SURVIVE_FRESHMAN_YEAR,
-				PLANNING_HAND,
-				// SURVIVE_LEARNING,
-				USEFUL_STUFF,
-				STUDYING_TIPS,
-				HOW_TO_LEARN,
-				PREREQUISITES_LEARNING,
-				PLANNING_INSTRUCTIONS,
-				PERSONAL_GOALS
-		));
-		EnumSet<StaticPage> staticPages = fromBitSet(StaticPage.class,
-				lastUsedSettings.getLong("staticPages", defaultStaticPages));
-
-		JPanel staticPagesPanel = new JPanel(new MigLayout());
-		staticPagesPanel.setBorder(BorderFactory.createTitledBorder("Vaste pagina's"));
-		staticPagesCheckBoxes = new JCheckBox[StaticPage.values().length];
-		int i = 0;
-		for (StaticPage sp : StaticPage.values()) {
-			JCheckBox jCheckBox = new JCheckBox(STATIC_PAGES.getOrDefault(sp, sp.name()));
-			jCheckBox.setSelected(staticPages.contains(sp));
-			staticPagesPanel.add(jCheckBox, i % 2 == 0 ? null : "wrap");
-			staticPagesCheckBoxes[i++] = jCheckBox;
+		ClassItemStructure classItemStructure = ClassItemStructure.valueOf(
+				lastUsedSettings.get("classItemStructure", CLASS_ROOM_SINGLE.name()));
+		selectedClassItemStructure = new AtomicReference<>(classItemStructure);
+		List<ImageIcon> icons = loadIcons(ImageIcon::new, "/structure_single_rectangle.png",
+				"/structure_rect_1_line.png", "/structure_rect_2_lines.png", "/structure_rect_3_lines.png");
+		List<JComponent> structureChoices = new ArrayList<>();
+		ButtonGroup structureChoiceGroup = new ButtonGroup();
+		for (ClassItemStructure cis : ClassItemStructure.values()) {
+			JRadioButton structureButton = new JRadioButton("", classItemStructure == cis);
+			structureButton.getModel().setActionCommand(cis.name());
+			structureButton.addActionListener(e -> selectedClassItemStructure.set(cis));
+			structureChoiceGroup.add(structureButton);
+			JLabel structureImage = new JLabel(icons.get(cis.ordinal()), SwingConstants.LEFT);
+			structureImage.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					selectedClassItemStructure.set(cis);
+					structureButton.setSelected(true);
+				}
+			});
+			JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			panel.add(structureButton);
+			panel.add(structureImage);
+			structureChoices.add(panel);
 		}
-		return staticPagesPanel;
+
+		GridBagConstraints spinnerConstraints = new GridBagConstraints();
+		spinnerConstraints.anchor = GridBagConstraints.EAST;
+		FormBuilder builder = new FormBuilder();
+		builder.add(0, 0, new JLabel("Startdatum"), startDateSpinner);
+		builder.add(0, 1, new JLabel("Einddatum"), endDateSpinner);
+		builder.add(0, 2, 1, actualPlannerPeriodLabel);
+		builder.add(0, 3, new JLabel("Aantal lesuren"), numClassesSpinner, spinnerConstraints);
+		int i = 4;
+		for (ClassItemStructure cis : ClassItemStructure.values()) {
+			int ordinal = cis.ordinal();
+			builder.add(0, i++, new JLabel(ordinal == 0 ? "Structuur" : ""), structureChoices.get(ordinal));
+		}
+
+		JPanel mainInputPanel = builder.build();
+		mainInputPanel.setBorder(BorderFactory.createTitledBorder("Data en layout"));
+
+		return mainInputPanel;
 	}
 
 	private @NotNull JPanel createDateTitlesPanel() {
 		dateTitlesTable = createDateTitlesTable();
 
-		JScrollPane scrollPane = new JScrollPane(dateTitlesTable);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		JScrollPane scrollPane = new JScrollPane(dateTitlesTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-		JButton removeSelectedRowsButton = new JButton("Verwijder geselecteerde datumregels");
-		removeSelectedRowsButton.addActionListener(e -> {
+		// noinspection SpellCheckingInspection
+		JPanel buttonPanel = new JPanel(new MigLayout("nogrid, fillx, aligny 100%, gapy unrel"));
+		buttonPanel.add(createButton("Verwijder geselecteerde datumregels", e1 -> {
 			DefaultTableModel model = (DefaultTableModel) dateTitlesTable.getModel();
 			int[] selectedRows = dateTitlesTable.getSelectedRows();
 			// Indices are in ascending order; loop backwards to avoid changing them
 			for (int i = selectedRows.length - 1; i >= 0; i--) {
 				model.removeRow(selectedRows[i]);
 			}
-		});
-		JButton addRowButton = new JButton("Voeg datumregel toe");
-		addRowButton.addActionListener(e -> {
+		}), "tag no");
+		buttonPanel.add(createButton("Voeg datumregel toe", e -> {
 			DefaultTableModel model = (DefaultTableModel) dateTitlesTable.getModel();
 			model.addRow(new Object[]{toDate(LocalDate.now()), toDate(LocalDate.now()), ""});
-		});
-		// noinspection SpellCheckingInspection
-		JPanel buttonPanel = new JPanel(new MigLayout("nogrid, fillx, aligny 100%, gapy unrel"));
-		buttonPanel.add(removeSelectedRowsButton, "tag no");
-		buttonPanel.add(addRowButton, "tag yes");
+		}), "tag yes");
 
-		JPanel panel = new JPanel(new MigLayout());
-		panel.add(buttonPanel, "south");
-		panel.add(scrollPane, "grow");
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(buttonPanel, BorderLayout.SOUTH);
+		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.setBorder(BorderFactory.createTitledBorder("Belangrijke periodes / vakanties"));
 		return panel;
+	}
+
+	private static @NotNull JButton createButton(String text, ActionListener actionListener) {
+		JButton removeSelectedRowsButton = new JButton(text);
+		removeSelectedRowsButton.addActionListener(actionListener);
+		return removeSelectedRowsButton;
 	}
 
 	private @NotNull JTable createDateTitlesTable() {
@@ -369,10 +318,7 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 			dateTitlesModel.addRow(new Object[]{toDate(row.from()), toDate(row.to()), row.text()});
 		}
 		JTable dateTitlesTable = new JTable(dateTitlesModel);
-		dateTitlesTable.setOpaque(true);
-		dateTitlesTable.getTableHeader().setOpaque(true);
-		dateTitlesTable.getTableHeader().setForeground(dateTitlesTable.getForeground());
-		dateTitlesTable.getTableHeader().setBackground(dateTitlesTable.getBackground());
+		dateTitlesTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
 		dateTitlesTable.getColumnModel().getColumn(0).setMinWidth(110);
 		dateTitlesTable.getColumnModel().getColumn(0).setMaxWidth(150);
 		dateTitlesTable.getColumnModel().getColumn(0).setCellEditor(
@@ -390,21 +336,8 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 	private @NotNull PlannerDescription createPlannerDescription(ActionEvent event) {
 		LocalDate startDate = toLocalDate((Date) startDateSpinner.getValue());
 		LocalDate endDate = toLocalDate((Date) endDateSpinner.getValue());
-		String title = titleField.getText();
-		String subtitle = subtitleField.getText();
-		int timetables = (Integer) timetablesSpinner.getValue();
-		int notePages = (Integer) notePagesSpinner.getValue();
-		int mindmapPages = (Integer) mindmapPagesSpinner.getValue();
 		int numClasses = (Integer) numClassesSpinner.getValue();
-		ClassItemStructure classItemStructure =
-				ClassItemStructure.values()[classItemStructureComboBox.getSelectedIndex()];
-		EnumSet<StaticPage> staticPages = EnumSet.noneOf(StaticPage.class);
-		for (int i = 0; i < StaticPage.values().length; i++) {
-			JCheckBox checkBox = staticPagesCheckBoxes[i];
-			if (checkBox.isSelected()) {
-				staticPages.add(StaticPage.values()[i]);
-			}
-		}
+		ClassItemStructure classItemStructure = selectedClassItemStructure.get();
 		TableModel dateTitlesModel = dateTitlesTable.getModel();
 		List<DateTitleFromTo> dateTitleFromToList = IntStream.range(0, dateTitlesModel.getRowCount())
 				.mapToObj(row -> {
@@ -433,28 +366,22 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 		textsByStartDate.putIfAbsent(startDate, "");
 		textsByStartDate.putIfAbsent(endDate, "");
 		List<DateTitle> dateTitles = textsByStartDate.entrySet().stream()
+				.dropWhile(entry -> entry.getKey().isBefore(startDate))
+				.takeWhile(entry -> !entry.getKey().isAfter(endDate))
 				.map(entry -> new DateTitle(entry.getKey(), entry.getValue()))
 				.toList();
 
 		lastUsedSettings.put("startDate", DATE_FORMATTER.format(startDate));
 		lastUsedSettings.put("endDate", DATE_FORMATTER.format(endDate));
-		lastUsedSettings.put("title", title);
-		lastUsedSettings.put("title", title);
-		lastUsedSettings.put("subtitle", subtitle);
-		lastUsedSettings.putInt("timetables", timetables);
-		lastUsedSettings.putInt("notePages", notePages);
-		lastUsedSettings.putInt("mindmapPages", mindmapPages);
 		lastUsedSettings.putInt("numClasses", numClasses);
 		lastUsedSettings.put("classItemStructure", classItemStructure.name());
-		lastUsedSettings.putLong("staticPages", asBitSet(staticPages));
 		try {
 			lastUsedSettings.put("dateTitles", OBJECT_MAPPER.writeValueAsString(dateTitleFromToList));
 		} catch (JsonProcessingException e) {
 			showErrorFor((Component) event.getSource(), e);
 		}
-		return new PlannerDescription(title, subtitle, timetables, notePages, mindmapPages, numClasses,
-				classItemStructure,
-				staticPages, dateTitles);
+		return new PlannerDescription("", "", 0, 0, 0, numClasses, classItemStructure,
+				EnumSet.noneOf(StaticPage.class), dateTitles);
 	}
 
 	private void generatePlanner(ActionEvent event) {
@@ -494,40 +421,11 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 		};
 	}
 
-	private static <E extends Enum<E>> EnumSet<E> fromBitSet(@SuppressWarnings("SameParameterValue") Class<E> enumType,
-	                                                         long bitset) {
-		E[] enumConstants = enumType.getEnumConstants();
-		EnumSet<E> enumSet = EnumSet.noneOf(enumType);
-		for (int i = 0; i < enumConstants.length; i++) {
-			if ((bitset & 1L << i) != 0) {
-				enumSet.add(enumConstants[i]);
-			}
-		}
-		return enumSet;
-	}
-
-	private static <E extends Enum<E>> long asBitSet(EnumSet<E> enumSet) {
-		if (enumSet.isEmpty()) {
-			return 0;
-		} else {
-			// noinspection unchecked: the type parameter of the method ensures this is safe
-			Class<E> enumType = (Class<E>) enumSet.iterator().next().getClass();
-			E[] enumConstants = enumType.getEnumConstants();
-			long bitset = 0;
-			for (int i = 0; i < enumConstants.length; i++) {
-				if (enumSet.contains(enumConstants[i])) {
-					bitset |= 1L << i;
-				}
-			}
-			return bitset;
-		}
-	}
-
 	private static LocalDate parseOrDefault(String text, LocalDate defaultValue) {
 		if (text == null) {
 			return defaultValue;
 		} else {
-			return LocalDate.parse(text, PlannerGeneratorLauncher.DATE_FORMATTER);
+			return LocalDate.parse(text, Launcher.DATE_FORMATTER);
 		}
 	}
 
@@ -601,4 +499,5 @@ public class PlannerGeneratorLauncher extends DesktopApp {
 			return super.getTableCellRendererComponent(table, dateString, isSelected, hasFocus, row, column);
 		}
 	}
+
 }
