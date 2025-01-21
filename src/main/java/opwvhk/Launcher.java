@@ -354,20 +354,17 @@ public class Launcher extends DesktopApp {
 		for (DateTitleFromTo dateTitleFromTo : dateTitleFromToList) {
 			LocalDate from = dateTitleFromTo.from();
 			LocalDate to = dateTitleFromTo.to().plusDays(1); // Start of next text
-			NavigableMap<LocalDate, String> subMap = textsByStartDate.subMap(from, true, to, true);
-			Map.Entry<LocalDate, String> lastEntry = subMap.lastEntry();
+			Map.Entry<LocalDate, String> lastEntry = textsByStartDate.floorEntry(from);
 			// Is the last text entry split? Then restore it.
-			// (no need to test for closing empty string: the result would be the same)
+			// (no need to test for empty string / end of last entry: the result would be the same)
 			String lastEntryText = lastEntry != null ? lastEntry.getValue() : "";
-			subMap.clear();
 			textsByStartDate.put(from, dateTitleFromTo.text());
 			textsByStartDate.put(to, lastEntryText);
 		}
 		textsByStartDate.putIfAbsent(startDate, "");
 		textsByStartDate.putIfAbsent(endDate, "");
-		List<DateTitle> dateTitles = textsByStartDate.entrySet().stream()
-				.dropWhile(entry -> entry.getKey().isBefore(startDate))
-				.takeWhile(entry -> !entry.getKey().isAfter(endDate))
+		List<DateTitle> dateTitles = textsByStartDate.subMap(startDate, true, endDate, true)
+				.entrySet().stream()
 				.map(entry -> new DateTitle(entry.getKey(), entry.getValue()))
 				.toList();
 
@@ -499,5 +496,4 @@ public class Launcher extends DesktopApp {
 			return super.getTableCellRendererComponent(table, dateString, isSelected, hasFocus, row, column);
 		}
 	}
-
 }
