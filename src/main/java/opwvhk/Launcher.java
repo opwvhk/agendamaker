@@ -11,6 +11,7 @@ import opwvhk.planner.PlannerGenerator;
 import opwvhk.planner.StaticPage;
 import opwvhk.swing.DesktopApp;
 import opwvhk.swing.FormBuilder;
+import opwvhk.swing.NarrowJEditorPane;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -65,7 +66,7 @@ public class Launcher extends DesktopApp {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
 	private static final String ERROR_TITLE = "Oeps... vraag een programmeur...";
 
-	public static void main(String[] args) throws IOException, FontFormatException {
+	public static void main(String[] args) {
 		new Launcher().start();
 	}
 
@@ -93,12 +94,8 @@ public class Launcher extends DesktopApp {
 				""";
 	}
 
-	public void start() throws IOException, FontFormatException {
-		JLabel header = new JLabel(APPLICATION_NAME);
-
-		header.setFont(loadTrueTypeFont("Caveat-Regular", Font.BOLD, (float) 36));
-		header.setHorizontalAlignment(SwingConstants.CENTER);
-		header.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+	public void start() {
+		JComponent header = createHeader();
 
 		JButton generatePlannerButton = createButton("Maak PDF", this::generatePlanner);
 		JButton saveButton = createButton("Bewaar invoer", e -> System.out.println(createPlannerDescription(e)));
@@ -110,8 +107,6 @@ public class Launcher extends DesktopApp {
 		JPanel mainInputPanel = createMainInputPanel();
 		JComponent dateTitlesPanel = createDateTitlesPanel();
 		Box content = hbox(vbox(mainInputPanel, Box.createVerticalGlue()), dateTitlesPanel);
-		mainInputPanel.setMinimumSize(mainInputPanel.getPreferredSize());
-		mainInputPanel.setMaximumSize(mainInputPanel.getPreferredSize());
 
 		// Build and display the window
 
@@ -128,6 +123,40 @@ public class Launcher extends DesktopApp {
 		ensureMinimumSize(mainWindow);
 		mainWindow.pack();
 		mainWindow.setVisible(true);
+	}
+
+	private @NotNull JComponent createHeader() {
+		String htmlText = """
+				<html lang="nl"><body>
+				<h2>Hoe te gebruiken</h2>
+				<p>
+				Deze agendamaker genereert een PDF-bestand op basis van de invoer hieronder. Alles wat geen knop is,
+				is een invoerveld. Beide knoppen rechtsonder slaan de huidige invoer op als voorkeursinstellingen.
+				</p><p>
+				Een paar extra opmerkingen:
+				</p><ul><li>
+				De namen van de periodes in de tabel rechts verschijnen als dagtekst in de planner.
+				Niet alle periodes komen in de planner: de start- en einddatum links bepalen het begin en einde.
+				</li><li>
+				Het aantal lesuren plus het aantal taken is 13, en er moeten minimaal 3 van elk zijn.
+				Het aantal lesuren is ook het aantal taken voor zaterdag, het aantal taken wordt ook gebruikt voor
+				zondag.
+				</li><li>
+				De structuur toont hoe de lesuren eruit zien. Linksboven staat altijd het lesuur, de keuze bepaalt het
+				aantal schrijflijnen of dat het een groot vak is.
+				<!--
+				</li><li>
+				</li><li>
+				</li><li>-->
+				</li></ul>
+				</body></html>""";
+
+		JEditorPane textArea = new NarrowJEditorPane();
+		textArea.setEditable(false);
+		textArea.setContentType("text/html");
+		textArea.setText(htmlText);
+		textArea.setBorder(BorderFactory.createEmptyBorder(2, 5, 5, 5));
+		return textArea;
 	}
 
 	private static void ensureMinimumSize(JFrame frame) {
@@ -173,13 +202,17 @@ public class Launcher extends DesktopApp {
 		endDateSpinner = createDateSpinner(initialPeriod[1]);
 
 		JLabel actualPlannerPeriodLabel = new JLabel("");
+		JLabel sizeLabel = new JLabel("(wordt 25 sept 2025 t/m 25 sept 2025)");
+		Dimension labelSize = sizeLabel.getPreferredSize();
+		actualPlannerPeriodLabel.setMinimumSize(labelSize);
+		actualPlannerPeriodLabel.setPreferredSize(labelSize);
 		ChangeListener plannerPeriodChangeListener = e -> {
 			LocalDate startDate = toLocalDate((Date) startDateSpinner.getValue());
 			LocalDate endDate = toLocalDate((Date) endDateSpinner.getValue());
 			LocalDate[] period = correctPeriod(new LocalDate[]{startDate, endDate});
 			if (!startDate.equals(period[0]) || !endDate.equals(period[1])) {
 				actualPlannerPeriodLabel.setText(
-						"(%s t/m %s)".formatted(DATE_FORMATTER.format(period[0]),
+						"(wordt %s t/m %s)".formatted(DATE_FORMATTER.format(period[0]),
 								DATE_FORMATTER.format(period[1])));
 			} else {
 				actualPlannerPeriodLabel.setText("");
@@ -209,7 +242,7 @@ public class Launcher extends DesktopApp {
 			JLabel structureImage = new JLabel(icons.get(cis.ordinal()), SwingConstants.LEFT);
 			structureImage.addMouseListener(new MouseAdapter() {
 				@Override
-				public void mouseClicked(MouseEvent e) {
+				public void mousePressed(MouseEvent e) {
 					selectedClassItemStructure.set(cis);
 					structureButton.setSelected(true);
 				}
@@ -235,6 +268,10 @@ public class Launcher extends DesktopApp {
 
 		JPanel mainInputPanel = builder.build();
 		mainInputPanel.setBorder(BorderFactory.createTitledBorder("Data en layout"));
+
+		Dimension size = mainInputPanel.getPreferredSize();
+		mainInputPanel.setMinimumSize(size);
+		mainInputPanel.setMaximumSize(size);
 
 		return mainInputPanel;
 	}
@@ -349,7 +386,6 @@ public class Launcher extends DesktopApp {
 				})
 				.sorted(Comparator.comparing(DateTitleFromTo::from))
 				.toList();
-		System.out.printf("dateTitleFromToList = %s\n", dateTitleFromToList);
 		NavigableMap<LocalDate, String> textsByStartDate = new TreeMap<>();
 		for (DateTitleFromTo dateTitleFromTo : dateTitleFromToList) {
 			LocalDate from = dateTitleFromTo.from();
