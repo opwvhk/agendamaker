@@ -31,6 +31,7 @@ import com.itextpdf.layout.properties.Property;
 import com.itextpdf.layout.properties.TabAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,6 @@ import static java.time.temporal.ChronoUnit.WEEKS;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static opwvhk.planner.WritableDocument.mmToPt;
-import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * Class to generate a PDF file with one or more calendar weeks.
@@ -1349,6 +1349,12 @@ public class PlannerGenerator {
 			}
 		}
 		document.addInFlow(table);
+	}
+
+	private static @NotNull String capitalize(String text) {
+		int[] codePoints = text.codePoints().toArray();
+		codePoints[0] = Character.toTitleCase(codePoints[0]);
+		return new String(codePoints, 0, codePoints.length);
 	}
 
 	private void addPlanningWeeks(WritableDocument document, int numClassSlots,
