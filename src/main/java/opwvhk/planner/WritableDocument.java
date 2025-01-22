@@ -137,7 +137,7 @@ public class WritableDocument implements Closeable {
 	}
 
 	/**
-	 * Start a new page in the document. Mirrors the left & right margins.
+	 * Start a new page in the document. Mirrors the left and right margins.
 	 */
 	public void startNewPage(boolean alsoStartNewPageIfLastOneIsEmpty) {
 		if (alsoStartNewPageIfLastOneIsEmpty || !pageIsEmpty) {
