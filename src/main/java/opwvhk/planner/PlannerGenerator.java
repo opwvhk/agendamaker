@@ -49,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -87,63 +88,65 @@ public class PlannerGenerator {
 
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
-			java.util.List<DateTitle> dateTitleList = new ArrayList<>();
-			// dateTitleList.addAll(java.util.List.of(
-			// 		// Order doesn't matter... so start with the first & last dates.
-			// 		new DateTitle(LocalDate.of(2024, SEPTEMBER, 2), ""),
-			// 		new DateTitle(LocalDate.of(2025, FEBRUARY, 6), ""),
-			// 		new DateTitle(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie"),
-			// 		new DateTitle(LocalDate.of(2024, NOVEMBER, 4), ""),
-			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie"),
-			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag"),
-			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag"),
-			// 		new DateTitle(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie"),
-			// 		new DateTitle(LocalDate.of(2025, JANUARY, 6), "")
-			// ));
-			//noinspection CollectionAddAllCanBeReplacedWithConstructor
-			dateTitleList.addAll(java.util.List.of(
-					// Order doesn't matter... so start with the first & last dates.
-					new DateTitle(LocalDate.of(2025, FEBRUARY, 6), ""),
-					new DateTitle(LocalDate.of(2025, JULY, 19), "Zomervakantie"),
-					new DateTitle(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie"),
-					new DateTitle(LocalDate.of(2025, FEBRUARY, 24), ""),
-					new DateTitle(LocalDate.of(2025, APRIL, 19), "Meivakantie"),
-					new DateTitle(LocalDate.of(2025, APRIL, 21), "1e Paasdag"),
-					new DateTitle(LocalDate.of(2025, APRIL, 22), "2e Paasdag"),
-					new DateTitle(LocalDate.of(2025, APRIL, 23), "Meivakantie"),
-					new DateTitle(LocalDate.of(2025, APRIL, 27), "Koningsdag"),
-					new DateTitle(LocalDate.of(2025, APRIL, 28), "Meivakantie"),
-					new DateTitle(LocalDate.of(2025, MAY, 6), ""),
-					new DateTitle(LocalDate.of(2025, MAY, 29), "Hemelvaart"),
-					new DateTitle(LocalDate.of(2025, MAY, 30), "dag na Hemelvaart (vrij)"),
-					new DateTitle(LocalDate.of(2025, MAY, 31), ""),
-					new DateTitle(LocalDate.of(2025, JUNE, 8), "1e Pinksterdag"),
-					new DateTitle(LocalDate.of(2025, JUNE, 9), "2e Pinksterdag"),
-					new DateTitle(LocalDate.of(2025, JUNE, 10), ""),
-					new DateTitle(LocalDate.of(2025, JULY, 12), "Zomervakantie")
-			));
-			// PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
-			// 		2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
-			// 		EnumSet.of(
-			// 				StaticPage.EMERGENCY_PLAN,
-			// 				StaticPage.SCHEDULE_AND_VACATIONS,
-			// 				StaticPage.SURVIVE_FRESHMAN_YEAR,
-			// 				StaticPage.PLANNING_HAND,
-			// 				// StaticPage.SURVIVE_LEARNING,
-			// 				StaticPage.USEFUL_STUFF,
-			// 				StaticPage.STUDYING_TIPS,
-			// 				StaticPage.HOW_TO_LEARN,
-			// 				StaticPage.PREREQUISITES_LEARNING,
-			// 				StaticPage.PLANNING_INSTRUCTIONS,
-			// 				StaticPage.PERSONAL_GOALS,
-			// 				StaticPage.GRADE_LIST
-			// 		),
-			// 		dateTitleList
-			// );
-			PlannerDescription plannerDescription = new PlannerDescription("", "Florentine",
-					2, 0, 0, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
-					EnumSet.noneOf(StaticPage.class), dateTitleList
+			// LocalDate startDate = LocalDate.of(2024, SEPTEMBER, 2);
+			// LocalDate endDate = LocalDate.of(2025, FEBRUARY, 6);
+			LocalDate startDate = LocalDate.of(2025, FEBRUARY, 6);
+			LocalDate endDate = LocalDate.of(2025, JULY, 19);
+
+			NavigableMap<LocalDate, String> allDateTitles = new TreeMap<>();
+			// Order doesn't matter... so start with the first & last dates.
+			allDateTitles.put(LocalDate.of(2024, SEPTEMBER, 2), "");
+			allDateTitles.put(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie");
+			allDateTitles.put(LocalDate.of(2024, NOVEMBER, 4), "");
+			allDateTitles.put(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie");
+			allDateTitles.put(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag");
+			allDateTitles.put(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag");
+			allDateTitles.put(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie");
+			allDateTitles.put(LocalDate.of(2025, JANUARY, 6), "");
+			allDateTitles.put(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie");
+			allDateTitles.put(LocalDate.of(2025, FEBRUARY, 24), "");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 19), "Meivakantie");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 21), "1e Paasdag");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 22), "2e Paasdag");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 23), "Meivakantie");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 27), "Koningsdag");
+			allDateTitles.put(LocalDate.of(2025, APRIL, 28), "Meivakantie");
+			allDateTitles.put(LocalDate.of(2025, MAY, 6), "");
+			allDateTitles.put(LocalDate.of(2025, MAY, 29), "Hemelvaart");
+			allDateTitles.put(LocalDate.of(2025, MAY, 30), "dag na Hemelvaart (vrij)");
+			allDateTitles.put(LocalDate.of(2025, MAY, 31), "");
+			allDateTitles.put(LocalDate.of(2025, JUNE, 8), "1e Pinksterdag");
+			allDateTitles.put(LocalDate.of(2025, JUNE, 9), "2e Pinksterdag");
+			allDateTitles.put(LocalDate.of(2025, JUNE, 10), "");
+			allDateTitles.put(LocalDate.of(2025, JULY, 12), "Zomervakantie");
+
+			NavigableMap<LocalDate, String> dateTitles = allDateTitles.subMap(startDate, true, endDate, true);
+			dateTitles.putIfAbsent(startDate,
+					Optional.ofNullable(allDateTitles.floorEntry(startDate)).map(Map.Entry::getValue).orElse(""));
+			dateTitles.putIfAbsent(endDate, allDateTitles.floorEntry(endDate).getValue());
+
+			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
+					2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
+					EnumSet.of(
+							StaticPage.EMERGENCY_PLAN,
+							StaticPage.SCHEDULE_AND_VACATIONS,
+							StaticPage.SURVIVE_FRESHMAN_YEAR,
+							StaticPage.PLANNING_HAND,
+							// StaticPage.SURVIVE_LEARNING,
+							StaticPage.USEFUL_STUFF,
+							StaticPage.STUDYING_TIPS,
+							StaticPage.HOW_TO_LEARN,
+							StaticPage.PREREQUISITES_LEARNING,
+							StaticPage.PLANNING_INSTRUCTIONS,
+							StaticPage.PERSONAL_GOALS,
+							StaticPage.GRADE_LIST
+					),
+					dateTitles
 			);
+			// PlannerDescription plannerDescription = new PlannerDescription("", "Florentine",
+			// 		2, 0, 0, 9, ClassItemStructure.CLASS_ROOM_SINGLE,
+			// 		EnumSet.noneOf(StaticPage.class), allDateTitles
+			// );
 			new PlannerGenerator(plannerDescription).generate(output);
 		}
 		// Desktop.getDesktop().open(new File("planner.pdf"));
@@ -515,9 +518,40 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Noodplan\n\u00A0").setFontSize(16))
 				.setTextAlignment(CENTER));
+		// document.addInFlow(document.createParagraph()
+		// 		.add(italic("(Plak hier de rode kaart die je van de conciërge krijgt)").setFontSize(14))
+		// 		.setTextAlignment(CENTER));
+		document.addInFlow(document.createParagraph());
 		document.addInFlow(document.createParagraph()
-				.add(italic("(Plak hier de rode kaart die je van de conciërge krijgt)").setFontSize(14))
+				.add(bold("Wat doe je wanneer het alarmsignaal klinkt:").setFontSize(14))
 				.setTextAlignment(CENTER));
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph());
+		List list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Laat alles staan (dus geen tassen/jassen enz. meenemen) en ga zo snel mogelijk met je docent naar de \
+				verzamelplaats (""").add(bold("= het grasveld naast de fietsenstalling")).add("""
+				) en blijf daar als klas bij elkaar.
+				\u00A0""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Indien je docent niet in het lokaal aanwezig is, sluit je dan als klas direct aan bij een andere \
+				docent en blijf als klas bij elkaar.
+				\u00A0""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Als je op het moment van alarm niet in je klas bent, maar bijvoorbeeld in de mediatheek, ga dan met \
+				de ontruimer van de mediatheek mee naar de verzamelplaats en meld je daar bij je docent af.
+				\u00A0""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Heb je een tussenuur of een uur van lesuitval en je bent op het moment van alarm toch in school of \
+				je komt net uit het winkelcentrum, meld je bij het meldpunt op de verzamelplaats.
+				\u00A0""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Zorg er dus voor dat je zo snel mogelijk via de kortste weg in veiligheid bent,""")
+				.add(bold(" en dat je je bij je docent afmeldt op de verzamelplaats")).add(".\n\u00A0")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Je mag de verzamelplaats pas verlaten als daar""").add(bold(" toestemming "))
+				.add("voor gegeven is.\n\u00A0")));
+		document.addInFlow(list);
 	}
 
 	private void addPrerequisitesForLearning(WritableDocument document) {
@@ -854,9 +888,348 @@ public class PlannerGenerator {
 		document.addInFlow(list);
 
 		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("De voorbereiding:").setFontSize(14)));
+		document.addInFlow(document.createParagraph().add("""
+				Een goede voorbereiding zort ervoor dat het leren makkelijker gaat. Dat doe je door precies te kijken \
+				wat je moet leren. Dat gaat zo:"""));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Als je in je werkboek kijkt, staat daar vaak wat je moet kennen en kunnen. Lees dit door en kijk voor \
+				jezelf of je dit allemaal kent en kunt. Zo niet, dan moet je daar meer voor voorbereiden.
+				Voor""").add(bold(" aardrijkskunde ")).add("""
+				staan de leerdoelen in een extra paragraaf.
+				Voor""").add(bold(" geschiedenis ")).add("""
+				staat achter elke paragraaf een grijs blok met tips voor de toets.
+				Voor""").add(bold(" biologie")).add(", ").add(bold("natuur-")).add(" en ")
+				.add(bold("scheikunde ")).add("""
+				staat aan het begin van elke paragraaf een kopje met leerdoelen.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Bij vakken met veel tekst (bijvoorbeeld geschiedenis), heeft ieder hoofdstuk een hoofdvraag en iedere \
+				paragraaf heeft een deelvraag. Kun je antwoord geven op deze vragen? Zo niet, lees dan alles nogmaals \
+				goed door!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Lees de tekst per alinea en schrijf in 1 of 2 zinnen op waar het stukje over gaat. \
+				Niet langer dan dit! Dit is het begin van een korte""").add(italic(" samenvatting."))));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Schrijf de dikgedrukte woorden over en schrijf de betekenis erachter.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Bekijk alle bronnen goed (ook tekeningen, kaarten, afbeeldingen)! Kun je deze in je eigen woorden \
+				uitleggen?""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Voor geschiedenis: leer alle jaartallen die voorin het hoofdstuk staan, of je docent moet het \
+				anders aangeven!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Voor geschiedenis: kijk ook naar de voorgaande hoofdstukken. Welke tijdvakken kwamen ervoor en hoe \
+				heette de periodes?""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Pak je werkboek er ook bij. Als het goed is heb je alles gemaakt EN nagekeken. Lees de \
+				opdrachten nog een door en kijk vooral goed naar de opdrachten die je fout had!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Kijk ook nog eens naar de opdrachten in je werkboek waarbij je bronnen moet gebruiken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Zijn er aantekeningen gemaakt? Leer deze dan ook!""")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Maakwerk:").setFontSize(14)));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add("Je maakwerk moet je ook nakijken, zodat je weet of je de opdrachten goed hebt gedaan en snapt.");
+		list.add("Als je gaat leren, kijk dan ook naar de opdrachten in je werkboek om te checken wat je fout had " +
+		         "gedaan, blijkbaar vond je dat moeilijk.");
+		list.add("Als opdrachten in de les zijn besproken dan is het ook handig om dat in je werkboek met een " +
+		         "uitroepteken aan te geven. Blijkbaar was dat een belangrijke vraag/vaardigheid.");
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph()
+				.add(bold("Verschillende manieren om grote teksten te leren:").setFontSize(14)));
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Een Mindmap maken:")));
+
+		Image mindmapImage = new Image(ImageDataFactory.create(
+				requireNonNull(getClass().getResource("/MindMap.png"))))
+				.scaleToFit(document.getEffectiveArea().getWidth() * 0.45f, mmToPt(100));
+		mindmapImage.setProperty(Property.FLOAT, FloatPropertyValue.RIGHT);
+		document.addInFlow(mindmapImage);
+
+		document.addInFlow(document.createParagraph().add("""
+				Een Mindmap maak je om veel begrippen en hun samenhang te leren. Iedere mindmap heeft een centraal \
+				thema. Zo maak je er een:"""));
+		list = document.createList().setListSymbol(ListNumberingType.DECIMAL);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Kies je hoofdthema. Bijvoorbeeld het onderwerp van de paragraaf")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Voeg subthema's toe.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Vul details in.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Gebruik kleuren en afbeeldingen (zie plaatje).")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak verbindingen / meer zijtakken.")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Samenvatten van een tekst:")));
+		document.addInFlow(document.createParagraph().add("""
+				Een samenvatting maak je van grote teksten als een mindmap niet zo handig is."""));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Om een goede samenvatting te kunnen schrijven is het belangrijk om te weten wat hoofd- en bijzaken \
+				zijn. In een goede samenvatting staan namelijk alleen maar hoofdzaken. De belangrijkste informatie in \
+				een tekst die wordt gegeven over het onderwerp noemen we hoofdzaken. Minder belangrijke informatie, \
+				zoals voorbeelden, noemen we bijzaken."""));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Gebruik je eigen woorden. Ga dus niet telkens de belangrijkste zin uit de alinea letterlijk \
+				overschrijven. Als je het in je eigen woorden formuleert, kun je het makkelijker onthouden!"""));
+		document.addInFlow(document.createParagraph().add(bold("Tip: ")).add("""
+				Maak gebruik van de leerdoelen en tips uit je voorbereiding. Zorg ervoor dat je deze \
+				leerdoelen goed kunt beantwoorden. Laat ze terugkomen in je samenvatting."""));
+
+		document.addInFlow(document.createParagraph().add("Zo maak je een samenvatting:"));
+		list = document.createList().setListSymbol(ListNumberingType.DECIMAL);
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Markeer de belangrijkste zinnen (of streep ze aan). Loop eerst de belangrijkste onderdelen van je \
+				tekst na: inleiding en slot.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Verzamel de 1 of 2 zinnen die je per alinea hebt opgeschreven (zie voorbereiding).")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Orden je informatie.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Schrijf de samenvatting.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Check of je samenvatting alle hoofd- en deelvragen uit de tekst beantwoord (zie voorbereiding).")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph().add(bold("Andere methodes om grote teksten te leren:")));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Cornell-methode\n")).add("""
+				De Cornell-methode is een manier om hoofd- en bijzaken te scheiden, en helpt bij het maken van \
+				aantekeningen en samenvattingen. Op internet of in de mentorles leer je hier meer over.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Braindump (leren leren)\n")).add("""
+				Braindump is een actieve leerstrategie, die helpt om te leren en om voorkennis te activeren. \
+				Op internet of in de mentorles leer je hier meer over.
+
+
+
+				"""))); // Let op: deze lege regels laten "vragen maken" niet afbreken over het pagina-einde
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Vragen maken\n")).add("""
+				Maak voor jezelf vragen die je een paar dagen van tevoren opschrijft. Schrijf op een apart \
+				blad de antwoorden en kijk of je ze na een paar dagen nog weet te beantwoorden! Dit kun je \
+				ook met andere klasgenootjes doen!""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Filmpjes en afbeeldingen\n")).add("""
+				Zoek op internet filmpjes of afbeeldingen die je misschien kunt gebruiken. Maak er eventueel \
+				vragen bij voor jezelf. Op de website van SchoolTV kun je veel informatie over veel \
+				onderwerpen vinden en ook op YouTube.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Atlas\n")).add("""
+				Voor aardrijkskunde kun je ook nog eens door de atlas zoeken naar kaarten die met het \
+				onderwerp te maken hebben. Kun je de dingen die je geleerd hebt toepassen op dat kaartje? \
+				Wat zie je allemaal, en waar heeft het mee te maken?""")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph()
+				.add(bold("Manieren om begrippen en/of woordjes te leren (o.a. talen):").setFontSize(14)));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Overschrijven\n")).add("""
+				Schrijf de woorden meerdere keren over, zo oefen je de spelling van alle woorden goed.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Flashcards\n")).add("""
+				Maak kaartjes van alle woorden die je moet leren met het Nederlands aan een kant, en de andere taal \
+				aan de andere kant (dit werkt ook voor begrippen en hun betekenis). \
+				Hussel alle kaartjes door elkaar en bekijk de kaartjes 1 voor 1. Bedenk per kaartje wat het woord op \
+				de achterkant is. Je draait het kaartje om en je checkt of je het antwoord goed had. Maak stapeltjes \
+				wist ik/wist ik nog niet. Herhaal alle woorden die je nog niet wist nog een aantal keer. \
+				Om de flashcards een stapje moeilijker te maken kan je ook het woord dat op de achterkant staat \
+				opschrijven op een blaadje. Zo oefen je meteen met het spellen van de woorden.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Memory\n")).add("""
+				Maak kaartjes van alle woorden die je moet leren in het Nederlands en de andere taal (dit werkt ook \
+				voor begrippen en hun betekenis). Hussel alle kaartjes en leg ze met de tekst naar beneden. Draai \
+				iedere keer 2 kaartjes om, wanneer je een match hebt haal je de kaartjes uit het spel.""")));
+		Image rightArrowImage = document.loadSvgImageResource("/rightArrow.svg").setWidth(12).setHeight(8);
+		// noinspection SpellCheckingInspection
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Digitaal overhoorprogramma"))
+				.add(" (bv Slim stampen/Quizlet/Wozzol/Teach2000/blooket)\n").add("""
+				Er zijn online veel overhoorprogramma’s te vinden. Zorg ervoor dat je altijd alle moeilijkheidsgraden \
+				doorloopt:\s""")
+				.add("onthouden ").add(rightArrowImage).add(" meerkeuze ").add(rightArrowImage).add(" spellen.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Leer groepjes met hetzelfde thema tegelijk\n")).add("""
+				Wanneer je woorden groepeert die hetzelfde thema hebben, is het makkelijker om ze te onthouden.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Voorbeeldzinnen verzinnen\n")).add("""
+				Verzin bij alle woorden uit de woordenlijst een nieuwe zin (in die taal) waaruit de betekenis van \
+				het woord blijkt.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Plaatjes/ezelsbruggetjes erbij verzinnen\n")).add("""
+				Probeer om ezelsbruggetjes of plaatjes te verzinnen bij de woordenlijst die je moet leren.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Laten overhoren door iemand anders\n")).add("""
+				Laat je door iemand die je kent overhoren. Dit kan mondeling, maar het is ook verstandig om de \
+				woorden op te schrijven. Zo oefen je ook de spelling van de woorden.""")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add(bold("Afdekmethode\n")).add("""
+				Dek de woordjes af met een blaadje. Bedenk in je hoofd wat de vertaling is, verschuif het papiertje \
+				en kijk of je het antwoord goed had. Je kan ook de woorden opschrijven en de spelling controleren.""")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Specifieke tips voor vakken:").setFontSize(14)));
+		document.addInFlow(document.createParagraph().add(bold("OSA:")));
+		document.addInFlow(document.createParagraph().add("""
+				Osa is geen gemakkelijk vak om te leren. Je krijgt heel veel informatie in een les en niet altijd \
+				letterlijke vragen die in de tekst staan tijdens een toets. Er wordt namelijk verwacht van je dat je \
+				de informatie kunt toepassen. Dit kan lastig zijn. Alleen doorlezen is in ieder geval niet voldoende!"""));
+		document.addInFlow(document.createParagraph().add(bold("Wiskunde:")));
+		document.addInFlow(document.createParagraph().add("""
+				Wiskunde is een vak waar je niet altijd voor kunt leren. Soms zijn er begrippen die je moet kennen, \
+				deze kun je wel leren."""));
+		document.addInFlow(document.createParagraph().add("Belangrijke dingen om te doen voor OSA en wiskunde zijn:"));
+		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak aantekeningen en stel vragen in de les.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak een samenvatting van de stof.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Maak oefentoetsen (zie het overzicht verderop).")));
+		list.add((ListItem) new ListItem().add(document.createParagraph()
+				.add("Diagnostische toets en/of de Herhaling-opdrachten in je boek maken + nakijken.")));
+		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
+				Check dat de uitwerkingen van je maakwerk zijn nagekeken en correct zijn (verbeterd). Zo niet, check \
+				bij je docent of dat het klopt. Dit is belangrijk, omdat je anders alleen een invuloefening maakt. \
+				En dan kun je NIET leren, want je weet niet wat je moet leren.""")));
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Handige websites:").setFontSize(14)));
+		java.util.List<String> usefulWebsitesTitles = java.util.List.of("Algemeen",
+				"Frans", "Engels", "Duits", "Science", "Nederlands", "Wiskunde", "OSA");
+		// noinspection SpellCheckingInspection
+		java.util.List<java.util.List<Map.Entry<String, String>>> usefulWebsites = java.util.List.of(
+				java.util.List.of( // Algemeen
+						Map.entry("https://studygo.nl/", ""),
+						Map.entry("https://quizlet.com/", ""),
+						Map.entry("https://www.wozzol.nl/", ""),
+						Map.entry("https://www.teach.nl/", "")
+				), java.util.List.of( // Frans
+						Map.entry("https://www.verbuga.eu/Mise/Mise.html", " (werkwoorden)")
+				), java.util.List.of( // Engels
+						Map.entry("https://readtheory.org/", "")
+				), java.util.List.of( // Duits
+						Map.entry("https://www.duits.de/", ""),
+						Map.entry("https://www.nubeterduits.nl/website/index.php?pag=1", ""),
+						Map.entry("https://deutsch-lernen.zum.de/wiki/Handlungsfelder", "\n\n")
+				), java.util.List.of( // Science
+						Map.entry("https://biologiepagina.nl/", " (bio)"),
+						Map.entry("", "Youtube: meneer wiersma (nask)"),
+						Map.entry("https://www.reken-taal.be/rekenen/conversies.htm",
+								": om te oefenen met eenheden en omrekenen")
+				), java.util.List.of( // Nederlands
+						Map.entry("https://www.cambiumned.nl/", "")
+				), java.util.List.of( // Wiskunde
+						Map.entry("", "In de digitale omgeving van je boek kan je ook uitlegfilmpjes vinden"),
+						Map.entry("", "Youtube: Math with Menno"),
+						Map.entry("", "Youtube: Wiskundeacademie"),
+						Map.entry("https://www.reken-taal.be/rekenen/conversies.htm",
+								": om te oefenen met eenheden en omrekenen")
+				), java.util.List.of( // OSA
+						Map.entry("", "Youtube: aardrijkskunde kennisclips"),
+						Map.entry("https://www.schooltv.nl/", ": histoclips over verschillende historische " +
+						                                      "onderwerpen en de serie ‘Welkom in…’")
+				));
+		for (int i = 0; i < usefulWebsitesTitles.size(); i++) {
+			String title = usefulWebsitesTitles.get(i);
+			java.util.List<Map.Entry<String, String>> websites = usefulWebsites.get(i);
+			document.addInFlow(document.createParagraph());
+			document.addInFlow(document.createParagraph().add(bold(title + ":")));
+			list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+			for (Map.Entry<String, String> entry : websites) {
+				String url = entry.getKey();
+				Text link = url.isEmpty() ? new Text("") : new Link(url, PdfAction.createURI(url));
+				String text = entry.getValue();
+				list.add((ListItem) new ListItem().add(document.createParagraph().add(link).add(text)));
+			}
+			document.addInFlow(list);
+		}
+
+		document.addInFlow(document.createParagraph());
+		document.addInFlow(document.createParagraph().add(bold("Maken van oefentoetsen:").setFontSize(14)));
+		document.addInFlow(document.createParagraph().add("Waar kun je de oefentoetsen per vak vinden:"));
+		Table table = new Table(createPercentArray(5)) // new float[]{2, 3}))
+				.useAllAvailableWidth().setFixedLayout()
+				.setPadding(0).setMargin(0).setBorder(Border.NO_BORDER);
+		table.addHeaderCell(createCell(document, "Vak"))
+				.addHeaderCell(createCell(document, "Classroom"))
+				.addHeaderCell(createCell(document, "Digitale methode"))
+				.addHeaderCell(createCell(document, "Boek"))
+				.addHeaderCell(createCell(document, "Overig (graag benoemen)"));
+		// noinspection SpellCheckingInspection
+		for (String text : java.util.List.of(
+				"Nederlands", "x", "", "", "",
+				"Engels", "x", "", "x", "",
+				"Frans", "", "x (le bilan)", "", "",
+				"Duits", "x (soms als extra)", "x", "", "",
+				"Science (bio)", "", "x", "x", "https://biologiepagina.nl/",
+				"Science (nask)", "", "x", "x", "",
+				"OSA (ak)", "", "x", "", "",
+				"OSA (ges)", "", "x", "x", "",
+				"Wiskunde", "x", "x", "x", ""
+		)) {
+			table.addCell(createCell(document, 1, TextAlignment.LEFT, p -> {
+				if (text.isEmpty()) {
+					p.add("\u00A0");
+				} else if (text.startsWith("http")) {
+					p.add(new Link(text, PdfAction.createURI(text)));
+				} else {
+					p.add(text);
+				}
+			}));
+		}
+		document.addInFlow(table);
+	}
+
+	@SuppressWarnings("unused")
+	private void addHowToLearn_old(WritableDocument document) throws IOException {
+		LOGGER.debug("Adding how to learn");
+		document.startNewPage(false);
+		document.addInFlow(document.createParagraph()
+				.add(bold("Voor je begint met leren:\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
+
+		Image heroBrainImage = new Image(ImageDataFactory.create(
+				requireNonNull(getClass().getResource("/Heldenbrein.jpg"))))
+				// .setMarginLeft(mmToPt(5))
+				// .setMarginBottom(mmToPt(5))
+				.scaleToFit(mmToPt(35), mmToPt(35));
+		heroBrainImage.setProperty(Property.FLOAT, FloatPropertyValue.RIGHT);
+		document.addInFlow(heroBrainImage);
+
+		List list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
+		// List list = document.createList().setListSymbol("● ");
+		list.add("Probeer niet alles in 1x te leren, deel het leerwerk daarom op in kleine stukjes.");
+		list.add("Hoe vaker je “traint”, hoe sterker de verbindingen in je hersenen worden.");
+		list.add("""
+				Je kent de leerstof pas echt goed als je de stof zonder je boek of aantekeningen erbij kan \
+				opschrijven/uitspreken/vertellen. Bijvoorbeeld wanneer je wordt overhoord door iemand anders of het \
+				aan een medeleerling uitlegt.""");
+		list.add("""
+				Het duurt ongeveer 15 minuten voor je hersenen in de leermodus zijn. Zorg daarom dat je tijdens het \
+				leren niet afgeleid wordt. Leg je telefoon in een andere kamer of zet je computer uit.""");
+		list.add("""
+				Wanneer je slaapt verwerken je hersenen alle nieuwe dingen die je hebt geleerd. Genoeg slapen is dus \
+				belangrijk.""");
+		document.addInFlow(list);
+
+		document.addInFlow(document.createParagraph());
 		document.addInFlow(document.createParagraph().add(bold(
 				"Verschillende manieren om begrippen en/of woordjes te leren (Engels/Frans/Duits):")
-				.setFontSize(16)));
+				.setFontSize(14)));
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Overschrijven")).add("\nSchrijf de woorden in het Engels meerdere keren over,")
@@ -1167,7 +1540,7 @@ public class PlannerGenerator {
 				"Duits", "x (soms als extra)", "x", "", "",
 				"Science (bio)", "", "x", "x", "https://biologiepagina.nl/",
 				"Science (nask)", "", "x", "x", "",
-				"OSA (ak)", "", "", "", "",
+				"OSA (ak)", "", "x", "", "",
 				"OSA (ges)", "", "x", "x", "",
 				"Wiskunde", "x", "x", "x", ""
 		)) {

@@ -3,6 +3,7 @@ package opwvhk.planner;
 import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -18,9 +19,13 @@ public record PlannerDescription(String title, String subtitle, int timeTablePag
                                  List<DateTitle> dateTitles) {
 	public PlannerDescription(String title, String subtitle, int timeTablePages, int notesPages, int mindmapPages,
 	                          int numClasses, ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages,
-	                          DateTitle... dateTitles) {
+	                          Map<LocalDate, String> dateTitles) {
 		this(title, subtitle, timeTablePages, notesPages, mindmapPages, numClasses, classItemStructure, staticPages,
-				List.of(dateTitles));
+				asDateTitleList(dateTitles));
+	}
+
+	private static List<DateTitle> asDateTitleList(Map<LocalDate, String> dateTitles) {
+		return dateTitles.entrySet().stream().map(e -> new DateTitle(e.getKey(), e.getValue())).toList();
 	}
 
 	public NavigableMap<LocalDate, String> sortedDateTitles() {
