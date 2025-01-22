@@ -11,9 +11,8 @@
 		<relativePath/><!-- Lookup parent from repository -->
 	</parent>
 
-	<packaging>war</packaging>
-	<artifactId>planner-generator</artifactId>
-	<version>development</version>
+	<artifactId>agendamaker</artifactId>
+	<version>0.7.0</version>
 
 	<name>Planner / Agenda</name>
 	<inceptionYear>2021</inceptionYear>
