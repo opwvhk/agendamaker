@@ -800,23 +800,25 @@ public class PlannerGenerator {
 		document.addInFlow(layoutTable.addCell(left).addCell(right));
 
 		document.addInFlow(document.createParagraph()
-				.add(bold("\nNuttige dingen").setFontSize(16))
+				.add(bold("\nSlimme notities").setFontSize(16))
 				.add("\n\u00A0"));
 
 		Table table3 = new Table(createPercentArray(new float[]{2, 3}))
 				.useAllAvailableWidth().setFixedLayout()
 				.setPadding(0).setMargin(0).setMarginBottom(16).setBorder(Border.NO_BORDER);
 		table3.addHeaderCell(createCell(document, "Wat"))
-				.addHeaderCell(createCell(document, "Inloggegevens / e-mail"));
+				.addHeaderCell(createCell(document, "Gebruikersnaam (géén wachtwoord!) / e-mail"));
 		// noinspection ExtractMethodRecommender
 		java.util.List<Map.Entry<String, String>> usefulLinks = java.util.List.of(
 				Map.entry("SomToday (agenda)", "https://inloggen.somtoday.nl/"),
 				Map.entry("Zermelo (rooster)", "https://hzm-gsf.zportal.nl/"),
+				Map.entry("Classroom", "https://classroom.google.com/"),
 				Map.entry("Schoolmail", "https://mail.google.com/"),
 				Map.entry("E-mail mentor 1", ""),
 				Map.entry("E-mail mentor 2", ""),
 				Map.entry("Kluisnummer", ""),
-				Map.entry("Vertrouwenspersonen", "")
+				Map.entry("Vertrouwenspersoon 1", ""),
+				Map.entry("Vertrouwenspersoon 2", "")
 		);
 		usefulLinks.forEach(entry ->
 				table3.addCell(createCell(document, 1, LEFT, p -> {
@@ -828,7 +830,7 @@ public class PlannerGenerator {
 						p.add(new Link(link, PdfAction.createURI(link)));
 					}
 				})).addCell(emptyCell(document)));
-		for (int i = 0; i < 10 - usefulLinks.size(); i++) {
+		for (int i = 0; i < 11 - usefulLinks.size(); i++) {
 			table3.addCell(createCell(document, "\n\u00A0")).addCell(emptyCell(document));
 		}
 		document.addInFlow(table3);
@@ -874,7 +876,7 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding how to learn");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("Voor je begint met leren:\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
+				.add(bold("Voordat je begint met leren:\n\u00A0").setFontSize(16)).setTextAlignment(CENTER));
 
 		Image heroBrainImage = new Image(ImageDataFactory.create(
 				requireNonNull(getClass().getResource("/Heldenbrein.jpg"))))
