@@ -4,13 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>net.sf.opk</groupId>
-		<artifactId>opk-parent</artifactId>
-		<version>10</version>
-		<relativePath/><!-- Lookup parent from repository -->
-	</parent>
-
+	<groupId>net.sf.opk</groupId>
 	<artifactId>agendamaker</artifactId>
 	<version>0.7.0</version>
 
