@@ -3,14 +3,20 @@
 Dit is een alleenstaand programma om agenda's mee te maken.
 
 Gebruiksaanwijzing:
-1. Installeer Java versie 21 of nieuwer (bijvoorbeeld de gratis Temurin-versie)
-   1. Voor Mac, via Homebrew:
-        ```shell
-        brew install temurin
-        ```
-   2. Voor Windows, handmatig; u vindt het installatieprogramma op de website: 
-      [Java Temurin releases](https://adoptium.net/temurin/releases/)
+1. Installeer Java versie 21 of nieuwer (bijvoorbeeld de gratis Temurin-versie). Kies hiervoor de optie die het makkelijkst lijkt:
+    * Handmatig installeren
+        1. Je vindt het installatieprogramma op de website:
+           [Java Temurin releases](https://adoptium.net/temurin/releases/)
+        2. Download het installatieprogramma dat het beste past bij jouw computer
+        3. Start het installatieprogramma; dit installeert Java.
+    * Voor Mac, via Homebrew:
+         ```shell
+         brew install temurin
+         ```
+    * ~~Via de AppStore, Microsoft Store, etc.?~~ Helaas, Java is niet beschikbaar via de AppStore.
 2. Bouw of download het `.jar`-bestand
+   * Je vindt het aan de rechterkant, onder "Releases"
+   * Zelf bouwen kan ook, maar vereist programmeerkennis
 3. Dubbelklik het `.jar`-bestand, of voer het uit via de "command line":
     ```shell
     java -jar agendamaker-0.7.0-full.jar
