@@ -3,7 +3,8 @@
 Dit is een alleenstaand programma om agenda's mee te maken.
 
 Gebruiksaanwijzing:
-1. Installeer Java versie 21 of nieuwer (bijvoorbeeld de gratis Temurin-versie). Kies hiervoor de optie die het makkelijkst lijkt:
+1. Installeer Java versie 21 of nieuwer (bijvoorbeeld de gratis Temurin-versie). Kies hiervoor de
+   optie die het makkelijkst lijkt:
     * Handmatig installeren
         1. Je vindt het installatieprogramma op de website:
            [Java Temurin releases](https://adoptium.net/temurin/releases/)
@@ -14,13 +15,31 @@ Gebruiksaanwijzing:
          brew install temurin
          ```
     * ~~Via de AppStore, Microsoft Store, etc.?~~ Helaas, Java is niet beschikbaar via de AppStore.
-2. Bouw of download het `.jar`-bestand
-   * Je vindt het aan de rechterkant, onder "Releases"
-   * Zelf bouwen kan ook, maar vereist programmeerkennis
-3. Dubbelklik het `.jar`-bestand, of voer het uit via de "command line":
-    ```shell
-    java -jar agendamaker-0.7.0-full.jar
-    ```
+2. Download het `.jar`-bestand van de laatste release
+    * Je vindt ze aan de rechterkant, onder "Releases"
+    * Op de pagina kies je voor `agendamaker-0.7.0-full.jar`, niet de broncode
+3. Omdat Apple je niet toestaat om het `.jar`-bestand direct uit te voeren, moet dat via de "command
+   line":
+    * Mac:
+      1. Open het programma "Terminal"
+      2. Ga naar de locatie waar het `.jar`-bestand staat:
+          ```shell
+          cd Downloads
+          ```
+      3. Start het programma
+         ```shell
+         java -jar agendamaker-0.7.0-full.jar
+         ```
+    * Windows:
+      1. Open het programma "cmd"
+      2. Ga naar de locatie waar het `.jar`-bestand staat:
+          ```shell
+          cd Downloads
+          ```
+      3. Start het programma
+         ```shell
+         java -jar agendamaker-0.7.0-full.jar
+         ```
 4. Lees de aanwijzingen op het scherm
 5. Maak de gewenste aanpassingen aan de invoer
 6. Druk op "Maak PDF"
