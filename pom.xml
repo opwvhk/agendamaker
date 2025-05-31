@@ -6,7 +6,7 @@
 
 	<groupId>net.sf.opk</groupId>
 	<artifactId>agendamaker</artifactId>
-	<version>0.7.0</version>
+	<version>0.7.1</version>
 
 	<name>Planner / Agenda</name>
 	<inceptionYear>2021</inceptionYear>
@@ -137,6 +137,36 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>oss-requires-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>
+					3.11.2</version>
+				<executions>
+					<execution>
+						<id>oss-requires-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration combine.children="append">
+					<doclint>all,-missing</doclint>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.2.0</version>
 				<executions>
@@ -154,6 +184,16 @@
 									<mainClass>opwvhk.Launcher</mainClass>
 								</transformer>
 							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
 				</executions>
