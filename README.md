@@ -61,10 +61,9 @@ De agenda die gegenereerd wordt gebruikt de volgende instellingen:
 
 * Paginaformaat: **A4**
 * Marges: **20 mm** aan elke kant
-* Lettertype: **Helvetica**  
-  (een van de standaardlettertypes van PDF-bestanden)
-* Lettergrootte: **11pt**
-* Regelafstand: 133%
+* Lettertype: **PT Sans**
+* Lettergrootte: **10pt**
+* Regelafstand: 125%
 
 In de broncode is te zien dat je ook een complete agenda kunt genereren, inclusief dagindeling,
 notitiepagina's, mindmap-pagina's en verschillende extra vaste pagina's (allemaal in een vaste

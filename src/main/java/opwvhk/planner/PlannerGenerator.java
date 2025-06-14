@@ -86,7 +86,7 @@ import static opwvhk.planner.WritableDocument.mmToPt;
  */
 public class PlannerGenerator {
 	private static final float PHI = 1.618033988749f;
-	private static final String LIST_SYMBOL_HYPHEN_BULLET = "⁃ ";
+	private static final String LIST_SYMBOL_HYPHEN_BULLET = "- ";
 	private static final String LIST_SYMBOL_BULLET = "• ";
 
 	public static void main(String[] args) throws IOException {
@@ -615,7 +615,7 @@ public class PlannerGenerator {
 						Je hebt het vast al héél vaak gehoord, maar herhaling van de stof die je moet leren is het \
 						allerbelangrijkste. Wanneer je veel aandacht aan iets geeft, worden er verbindingen \
 						aangelegd in je hersenen, waardoor je er steeds beter in wordt. In de eerste 20 minuten na \
-						het leren, kan je al zo’n 40% vergeten. Dat is bijna de helft. Herhalen zorgt ervoor dat je \
+						het leren, kan je al zo'n 40% vergeten. Dat is bijna de helft. Herhalen zorgt ervoor dat je \
 						minder vergeet. Wanneer je dus veel aandacht aan iets geeft door het te herhalen, word je \
 						er én\s""")
 				.add(italic("beter"))
@@ -1072,7 +1072,7 @@ public class PlannerGenerator {
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Digitaal overhoorprogramma"))
 				.add(" (bv Slim stampen/Quizlet/Wozzol/Teach2000/blooket)\n").add("""
-				Er zijn online veel overhoorprogramma’s te vinden. Zorg ervoor dat je altijd alle moeilijkheidsgraden \
+				Er zijn online veel overhoorprogramma's te vinden. Zorg ervoor dat je altijd alle moeilijkheidsgraden \
 				doorloopt:\s""")
 				.add("onthouden ").add(rightArrowImage).add(" meerkeuze ").add(rightArrowImage).add(" spellen.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
@@ -1157,7 +1157,7 @@ public class PlannerGenerator {
 				), java.util.List.of( // OSA
 						Map.entry("", "Youtube: aardrijkskunde kennisclips"),
 						Map.entry("https://www.schooltv.nl/", ": histoclips over verschillende historische " +
-						                                      "onderwerpen en de serie ‘Welkom in…’")
+						                                      "onderwerpen en de serie ‘Welkom in…'")
 				));
 		for (int i = 0; i < usefulWebsitesTitles.size(); i++) {
 			String title = usefulWebsitesTitles.get(i);
@@ -1354,7 +1354,7 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Tijdschema:\n").setFontSize(16)));
 		document.addInFlow(document.createParagraph()
-				.add("Hoe is jouw week gevuld met school, hobby’s en sporten? Vul dit hieronder in. Geef elk " +
+				.add("Hoe is jouw week gevuld met school, hobby's en sporten? Vul dit hieronder in. Geef elk " +
 				     "tijdsblok een ander kleurtje."));
 
 		UnitValue[] columnWidths = createPercentArray(8);
@@ -1368,8 +1368,8 @@ public class PlannerGenerator {
 		}
 		for (LocalTime time = startOfDay; !time.isAfter(endOfDay); time = time.plusMinutes(30)) {
 			table.addCell(
-					new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(1.15f))
-							.setTextAlignment(RIGHT).setPaddings(3, 6, -3, 0));
+					new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(1f))
+							.setTextAlignment(RIGHT).setPaddings(0, 6, -3, 0));
 			for (int c = 1; c < columnWidths.length; c++) {
 				table.addCell(emptyCell(document));
 			}
@@ -1388,10 +1388,12 @@ public class PlannerGenerator {
 			throws IOException {
 		LOGGER.debug("Adding planning weeks");
 
-		Image emptyCircleImage = document.loadSvgImageResource("/circle-empty.svg").setWidth(15).setHeight(15);
+		float diameter = 13;
+		Image emptyCircleImage = document.loadSvgImageResource("/circle-empty.svg")
+				.setWidth(diameter).setHeight(diameter);
 		UnitValue[] columnWidths = createPercentArray(3);
 		// numClassSlots is also used for planning slots on Saturday
-		int numPlanningSlots = 13 - numClassSlots;
+		int numPlanningSlots = 12 - numClassSlots;
 		if (numClassSlots < 3) {
 			throw new IllegalArgumentException("numClassSlots must at least be 3");
 		}
@@ -1402,7 +1404,7 @@ public class PlannerGenerator {
 		LocalDate lastDateThatMustBePresent = dateTitles.lastKey();
 		for (LocalDate monday = dateTitles.firstKey(); !monday.isAfter(
 				lastDateThatMustBePresent); monday = monday.plusWeeks(1)) {
-			int extraPadding = 9;
+			int extraPadding = 1;
 			LOGGER.debug("Adding planning week starting on {}", monday);
 
 			ClassItemStructure classItemStructure = plannerDescription.classItemStructure();
@@ -1444,7 +1446,7 @@ public class PlannerGenerator {
 				table.addCell(getCreateClassCell(document, 1, extraPadding, classItemStructure, r + 1));
 			}
 			for (int c = 0; c < 3; c++) {
-				table.addCell(createCell(document, 1, "Planning"));
+				table.addCell(createCell(document, 1, "Planning\n\u00A0"));
 			}
 			for (int r = 0; r < numPlanningSlots * 3; r++) {
 				table.addCell(createCell(document, 1, RIGHT,
@@ -1478,8 +1480,8 @@ public class PlannerGenerator {
 							p -> p.add("\u00A0").add(emptyCircleImage).add("\u00A0")).setVerticalAlignment(BOTTOM));
 				}
 			}
-			table.addCell(createCell(document, 1, "Planning"));
-			table.addCell(createCell(document, 1, "Planning"));
+			table.addCell(createCell(document, 1, "Planning\n\u00A0"));
+			table.addCell(createCell(document, 1, "Planning\n\u00A0"));
 			// Sunday
 			table.addCell(createDateCellWithText(document, dateTitles, columnWidth, monday.plusDays(6)));
 			for (int r = 0; r < numPlanningSlots; r++) {
@@ -1502,8 +1504,8 @@ public class PlannerGenerator {
 
 	private Cell getCreateClassCell(WritableDocument document, int rowspan, int extraPadding,
 	                                ClassItemStructure classItemStructure, int classHour) {
-		float extraPadding1 = extraPadding + 22f;
-		float extraPadding2 = ((extraPadding + 11f) / 2f) - 0.5f;
+		float extraPadding1 = extraPadding + 20f;
+		float extraPadding2 = ((extraPadding + 10f) / 2f) - 0.5f;
 		float extraPadding3 = (extraPadding / 3f) - 1f;
 		float extraPadding4 = extraPadding3 - 0.577f;
 		if (classItemStructure == ClassItemStructure.SINGLE_FIELD) {

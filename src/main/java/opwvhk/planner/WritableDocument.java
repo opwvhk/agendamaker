@@ -1,5 +1,8 @@
 package opwvhk.planner;
 
+import com.itextpdf.io.font.FontProgram;
+import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
@@ -58,8 +61,8 @@ public class WritableDocument implements Closeable {
 	 * The number of points in a millimeter. 72 pt/in / 25.4 mm/in ~= 2.83 pt/mm
 	 */
 	private static final float MM_IN_POINTS = 72 / 25.4f;
-	private static final float DEFAULT_LINE_SPACING = 4 / 3f;
-	public static final float DEFAULT_FONT_SIZE = 11f;
+	private static final float DEFAULT_LINE_SPACING = 1.25f; //4 / 3f;
+	public static final float DEFAULT_FONT_SIZE = 10f;
 
 	private final PdfDocument pdfDocument;
 	final Document document;
@@ -70,7 +73,12 @@ public class WritableDocument implements Closeable {
 	private boolean pageIsEmpty;
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
-		font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+		// font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+		try (InputStream fontStream = getClass().getResourceAsStream("/PTSans/PTSans-Regular.ttf")) {
+			byte[] ttfBytes = requireNonNull(fontStream).readAllBytes();
+			FontProgram ptSansProgram = FontProgramFactory.createFont(ttfBytes, true);
+			font = PdfFontFactory.createFont(ptSansProgram);
+		}
 		fontSize = DEFAULT_FONT_SIZE;
 
 		PdfWriter pdfWriter = new PdfWriter(output);
@@ -331,7 +339,7 @@ public class WritableDocument implements Closeable {
 		} else {
 			rawResult = unitValue.getValue();
 		}
-		return Math.max(0, Math.min(maxValue, rawResult));
+		return max(0, Math.min(maxValue, rawResult));
 	}
 
 	private float pointValue(UnitValue unitValue) {
