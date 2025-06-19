@@ -33,13 +33,13 @@ Download het programma
 
 Download het `.jar`-bestand van de laatste release
 * Je vindt ze aan de rechterkant, onder "Releases"
-* Op de pagina kies je voor `agendamaker-0.7.2-full.jar`
+* Op de pagina kies je voor `agendamaker-<versie>-full.jar`
 * Zet het bestand op een leuke plek neer
 
 Voor Windows ben je klaar; voor Mac nog niet:
 * Download ook het bestand `Unquarantine.zip`
 * Pak dit bestand uit; Je ziet nu een robotje met iets zwarts in zijn hand, en de naam "Unquarantine.app"
-* Sleep het bestand `agendamaker-0.7.2-full.jar` over het robotje
+* Sleep het bestand `agendamaker-<versie>-full.jar` over het robotje
 
 
 Gebruik het programma
@@ -48,7 +48,7 @@ Gebruik het programma
 1. Start het programma (dubbel klikken)
 2. Lees de aanwijzingen op het scherm
 3. Maak de gewenste aanpassingen aan de invoer
-4. Druk op "Maak PDF"
+4. Druk op "Maak agenda"
 
 Als je op een van de knoppen rechts onderin het scherm drukt, slaat het programma alle instellingen
 op als voorkeursinstellingen. Deze worden weer getoond wanneer je het programma een volgende keer
@@ -68,4 +68,4 @@ De agenda die gegenereerd wordt gebruikt de volgende instellingen:
 In de broncode is te zien dat je ook een complete agenda kunt genereren, inclusief dagindeling,
 notitiepagina's, mindmap-pagina's en verschillende extra vaste pagina's (allemaal in een vaste
 volgorde). Dit vereist kennis van programmeren, want dat kan uitsluitend via de
-methode [opwvhk.planner.PlannerGenerator#main()](https://github.com/opwvhk/agendamaker/blob/main/src/main/java/opwvhk/planner/PlannerGenerator.java#L92).
+methode [`opwvhk.planner.PlannerGenerator#main()` (link)](https://github.com/opwvhk/agendamaker/blob/main/src/main/java/opwvhk/planner/PlannerGenerator.java#L92).

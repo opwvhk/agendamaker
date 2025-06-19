@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.miginfocom.swing.MigLayout;
 import opwvhk.planner.ClassItemStructure;
-import opwvhk.planner.DateTitle;
 import opwvhk.planner.PlannerDescription;
 import opwvhk.planner.PlannerGenerator;
 import opwvhk.planner.StaticPage;
@@ -97,7 +96,7 @@ public class Launcher extends DesktopApp {
 	public void start() {
 		JComponent header = createHeader();
 
-		JButton generatePlannerButton = createButton("Maak PDF", this::generatePlanner);
+		JButton generatePlannerButton = createButton("Maak agenda", this::generatePlanner);
 		JButton saveButton = createButton("Bewaar invoer", e -> System.out.println(createPlannerDescription(e)));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -403,10 +402,6 @@ public class Launcher extends DesktopApp {
 		}
 		textsByStartDate.putIfAbsent(startDate, "");
 		textsByStartDate.putIfAbsent(endDate, "");
-		List<DateTitle> dateTitles = textsByStartDate.subMap(startDate, true, endDate, true)
-				.entrySet().stream()
-				.map(entry -> new DateTitle(entry.getKey(), entry.getValue()))
-				.toList();
 
 		lastUsedSettings.put("startDate", DATE_FORMATTER.format(startDate));
 		lastUsedSettings.put("endDate", DATE_FORMATTER.format(endDate));
@@ -418,7 +413,7 @@ public class Launcher extends DesktopApp {
 			showErrorFor((Component) event.getSource(), e);
 		}
 		return new PlannerDescription("", "", 0, 0, 0, numClasses, classItemStructure,
-				EnumSet.noneOf(StaticPage.class), dateTitles);
+				EnumSet.noneOf(StaticPage.class), textsByStartDate);
 	}
 
 	private void generatePlanner(ActionEvent event) {
