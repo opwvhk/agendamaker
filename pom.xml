@@ -6,7 +6,7 @@
 
 	<groupId>net.sf.opk</groupId>
 	<artifactId>agendamaker</artifactId>
-	<version>0.7.1</version>
+	<version>0.7.2</version>
 
 	<name>Planner / Agenda</name>
 	<inceptionYear>2021</inceptionYear>
