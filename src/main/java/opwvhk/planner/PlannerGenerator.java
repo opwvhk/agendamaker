@@ -128,7 +128,7 @@ public class PlannerGenerator {
 					Optional.ofNullable(allDateTitles.floorEntry(startDate)).map(Map.Entry::getValue).orElse(""));
 			dateTitles.putIfAbsent(endDate, allDateTitles.floorEntry(endDate).getValue());
 
-			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", "2024 – 2025",
+			PlannerDescription plannerDescription = new PlannerDescription("Planagenda", " – ",
 					2, 3, 3, 7, ClassItemStructure.CLASS_ROOM_SINGLE,
 					EnumSet.of(
 							StaticPage.EMERGENCY_PLAN,
@@ -156,8 +156,8 @@ public class PlannerGenerator {
 	}
 
 	/**
-     * Logger for this class.
-     */
+	 * Logger for this class.
+	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(PlannerGenerator.class.getName());
 
 	private static final Locale LOCALE = Locale.forLanguageTag("nl-NL");
@@ -167,15 +167,16 @@ public class PlannerGenerator {
 	private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("EEEE: d", LOCALE);
 	private static final DateTimeFormatter WEEKDAY_FORMAT = DateTimeFormatter.ofPattern("EEEE", LOCALE);
 	/**
-     * The description of the planner to generate.
-     */
+	 * The description of the planner to generate.
+	 */
 	private final PlannerDescription plannerDescription;
+	private final float headingFontSize;
 
 	/**
-     * Create a planner generator.
-     *
-     * @param plannerDescription a description of the planner to generate
-     */
+	 * Create a planner generator.
+	 *
+	 * @param plannerDescription a description of the planner to generate
+	 */
 	public PlannerGenerator(PlannerDescription plannerDescription) {
 		java.util.List<DateTitle> dateTitles = new ArrayList<>(plannerDescription.dateTitles());
 
@@ -196,15 +197,16 @@ public class PlannerGenerator {
 				plannerDescription.notesPages(), plannerDescription.mindmapPages(), plannerDescription.numClasses(),
 				plannerDescription.classItemStructure(),
 				plannerDescription.staticPages(), dateTitles);
+		this.headingFontSize = WritableDocument.DEFAULT_FONT_SIZE * 16f / 11f;
 	}
 
 	/**
-     * Generate a week planner into an {@link OutputStream}.
-     *
-     * @param output the stream to write to
-     * @throws IOException  when the planner cannot be written
-     * @throws PdfException when the planner cannot be generated
-     */
+	 * Generate a week planner into an {@link OutputStream}.
+	 *
+	 * @param output the stream to write to
+	 * @throws IOException  when the planner cannot be written
+	 * @throws PdfException when the planner cannot be generated
+	 */
 	public void generate(OutputStream output) throws IOException, PdfException {
 		float topBottomMargin = mmToPt(20);
 		float margin = mmToPt(20);
@@ -214,12 +216,12 @@ public class PlannerGenerator {
 	}
 
 	/**
-     * Generate a week planner into a {@link PdfDocument}.
-     *
-     * @param document the document to write to
-     * @throws IOException  when the planner cannot be written
-     * @throws PdfException when the planner cannot be generated
-     */
+	 * Generate a week planner into a {@link PdfDocument}.
+	 *
+	 * @param document the document to write to
+	 * @throws IOException  when the planner cannot be written
+	 * @throws PdfException when the planner cannot be generated
+	 */
 	public void generate(WritableDocument document) throws IOException, PdfException {
 		if (!plannerDescription.title().isEmpty()) {
 			// Generate the entire planner (content created for Huizermaat)
@@ -234,12 +236,12 @@ public class PlannerGenerator {
 	}
 
 	/**
-     * Generate a week planner with additional stuff into a {@link PdfDocument}.
-     *
-     * @param document the document to write to
-     * @throws IOException  when the planner cannot be written
-     * @throws PdfException when the planner cannot be generated
-     */
+	 * Generate a week planner with additional stuff into a {@link PdfDocument}.
+	 *
+	 * @param document the document to write to
+	 * @throws IOException  when the planner cannot be written
+	 * @throws PdfException when the planner cannot be generated
+	 */
 	public void generateFullPlanner(WritableDocument document) throws IOException, PdfException {
 		addPageNumbersFromPage2(document);
 		addTitlePage(document, plannerDescription.title(), plannerDescription.subtitle());
@@ -352,12 +354,12 @@ public class PlannerGenerator {
 	}
 
 	/**
-     * Generate a week planner with special front and back pages into a {@link PdfDocument}.
-     *
-     * @param document the document to write to
-     * @throws IOException  when the planner cannot be written
-     * @throws PdfException when the planner cannot be generated
-     */
+	 * Generate a week planner with special front and back pages into a {@link PdfDocument}.
+	 *
+	 * @param document the document to write to
+	 * @throws IOException  when the planner cannot be written
+	 * @throws PdfException when the planner cannot be generated
+	 */
 	public void generatePlannerForFlorentine(WritableDocument document) throws IOException, PdfException {
 		document.drawFullPage(drawFullPageImage("/page_front.jpg"));
 		document.startNewPage(false);
@@ -389,12 +391,12 @@ public class PlannerGenerator {
 	}
 
 	/**
-     * Generate week planner pages into a {@link PdfDocument}.
-     *
-     * @param document the document to write to
-     * @throws IOException  when the planner cannot be written
-     * @throws PdfException when the planner cannot be generated
-     */
+	 * Generate week planner pages into a {@link PdfDocument}.
+	 *
+	 * @param document the document to write to
+	 * @throws IOException  when the planner cannot be written
+	 * @throws PdfException when the planner cannot be generated
+	 */
 	public void generatePlanningWeeks(WritableDocument document) throws IOException, PdfException {
 		// Contrary to the other planners, this planner is not a complete, ready-to-print document.
 		// So we do not ensure the planner starts at an even-numbered page.
@@ -477,16 +479,8 @@ public class PlannerGenerator {
 				.setPadding(0).setMargin(0).setMarginBottom(16);
 		for (String cellText : java.util.List.of(
 				"Normaal rooster", "Verkort rooster",
-				"1. 08:15 - 09:15", "1. 08:15 - 08:55",
-				"2. 09:15 - 10:15", "2. 08:55 - 09:35",
-				"pauze", /*       */"pauze",
-				"3. 10:30 - 11:30", "3. 09:55 - 10:35",
-				"4. 11:30 - 12:30", "4. 10:35 - 11:15",
-				"pauze", /*       */"pauze",
-				"5. 13:00 - 14:00", "5. 11:35 - 12:15",
-				"6. 14:00 - 15:00", "6. 12:15 - 12:55",
-				"pauze", /*       */"7. 12:55 - 13:35",
-				"7. 15:15 - 16:15", "8. 13:35 - 14:15"
+				"", "", "", "", "", "", "", "", "", "",
+				"", "", "", "", "", "", "", "", "", ""
 
 		)) {
 			table.addCell(createCell(document, 1, cellText).setPadding(mmToPt(2)));
@@ -496,19 +490,20 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nVakanties en lesvrije dagen\n").setFontSize(16)).setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
-				.add(italic("2024 – 2025\n\u00A0").setFontSize(14)).setTextAlignment(CENTER));
+				.add(italic("20__ – 20__\n\u00A0").setFontSize(14)).setTextAlignment(CENTER));
 
 		table = new Table(createPercentArray(new float[]{4.75f, 9.25f})).setAutoLayout()//.setFixedLayout()
 				.setHorizontalAlignment(HorizontalAlignment.CENTER)
 				.setPadding(0).setMargin(0).setMarginBottom(16);
 		for (String cellText : java.util.List.of(
-				"Herfstvakantie", "Zaterdag 26 oktober 2024 t/m zondag 3 november 2024",
-				"Kerstvakantie", "Zaterdag 21 december 2024 t/m zondag 5 januari 2025",
-				"Voorjaarsvakantie", "Zaterdag 15 februari 2025 t/m zondag 23 februari 2025",
-				"Meivakantie", "Zaterdag 19 april 2025 t/m maandag 5 mei 2025",
-				"Hemelvaart", "Donderdag 29 mei en vrijdag 30 mei 2025",
-				"2e Pinksterdag", "Maandag 9 juni 2025",
-				"Zomervakantie", "Zaterdag 12 juli 2025 t/m zondag 24 augustus 2025"
+				"Herfstvakantie", "",
+				"Kerstvakantie", "",
+				"Voorjaarsvakantie", "",
+				"2e Paasdag", "",
+				"Meivakantie", "",
+				"Hemelvaart", "",
+				"2e Pinksterdag", "",
+				"Zomervakantie", ""
 		)) {
 			table.addCell(createCell(document, 1, cellText).setPadding(mmToPt(2)));
 		}
@@ -549,10 +544,10 @@ public class PlannerGenerator {
 				je komt net uit het winkelcentrum, meld je dan bij het meldpunt (= een BHV-er) op de verzamelplaats.
 				\u00A0""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
-				Zorg er dus voor dat je zo snel mogelijk via de kortste weg in veiligheid bent,""")
+						Zorg er dus voor dat je zo snel mogelijk via de kortste weg in veiligheid bent,""")
 				.add(bold(" en dat je je bij je docent meldt op de verzamelplaats")).add(".\n\u00A0")));
 		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
-				Je mag de verzamelplaats pas verlaten als daar""").add(bold(" toestemming "))
+						Je mag de verzamelplaats pas verlaten als daar""").add(bold(" toestemming "))
 				.add("voor gegeven is.\n\u00A0")));
 		document.addInFlow(list);
 	}
@@ -909,15 +904,15 @@ public class PlannerGenerator {
 				wat je moet leren. Dat gaat zo:"""));
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
-				Als je in je werkboek kijkt, staat daar vaak wat je moet kennen en kunnen. Lees dit door en kijk voor \
-				jezelf of je dit allemaal kent en kunt. Zo niet, dan moet je daar meer voor voorbereiden.
-				Voor""").add(bold(" aardrijkskunde ")).add("""
-				staan de leerdoelen in een extra paragraaf.
-				Voor""").add(bold(" geschiedenis ")).add("""
-				staat achter elke paragraaf een grijs blok met tips voor de toets.
-				Voor""").add(bold(" biologie")).add(", ").add(bold("natuur-")).add(" en ")
+						Als je in je werkboek kijkt, staat daar vaak wat je moet kennen en kunnen. Lees dit door en kijk voor \
+						jezelf of je dit allemaal kent en kunt. Zo niet, dan moet je daar meer voor voorbereiden.
+						Voor""").add(bold(" aardrijkskunde ")).add("""
+						staan de leerdoelen in een extra paragraaf.
+						Voor""").add(bold(" geschiedenis ")).add("""
+						staat achter elke paragraaf een grijs blok met tips voor de toets.
+						Voor""").add(bold(" biologie")).add(", ").add(bold("natuur-")).add(" en ")
 				.add(bold("scheikunde ")).add("""
-				staat aan het begin van elke paragraaf een kopje met leerdoelen.""")));
+						staat aan het begin van elke paragraaf een kopje met leerdoelen.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph().add("""
 				Bij vakken met veel tekst (bijvoorbeeld geschiedenis), heeft ieder hoofdstuk een hoofdvraag en iedere \
 				paragraaf heeft een deelvraag. Kun je antwoord geven op deze vragen? Zo niet, lees dan alles nogmaals \
@@ -1019,31 +1014,31 @@ public class PlannerGenerator {
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Cornell-methode\n")).add("""
-				De Cornell-methode is een manier om hoofd- en bijzaken te scheiden, en helpt bij het maken van \
-				aantekeningen en samenvattingen. Op internet of in de mentorles leer je hier meer over.""")));
+						De Cornell-methode is een manier om hoofd- en bijzaken te scheiden, en helpt bij het maken van \
+						aantekeningen en samenvattingen. Op internet of in de mentorles leer je hier meer over.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Braindump (leren leren)\n")).add("""
-				Braindump is een actieve leerstrategie, die helpt om te leren en om voorkennis te activeren. \
-				Op internet of in de mentorles leer je hier meer over.
+						Braindump is een actieve leerstrategie, die helpt om te leren en om voorkennis te activeren. \
+						Op internet of in de mentorles leer je hier meer over.
 
 
 
-				"""))); // Let op: deze lege regels laten "vragen maken" niet afbreken over het pagina-einde
+						"""))); // Let op: deze lege regels laten "vragen maken" niet afbreken over het pagina-einde
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Vragen maken\n")).add("""
-				Maak voor jezelf vragen die je een paar dagen van tevoren opschrijft. Schrijf op een apart \
-				blad de antwoorden en kijk of je ze na een paar dagen nog weet te beantwoorden. Dit kun je \
-				ook met andere klasgenootjes doen.""")));
+						Maak voor jezelf vragen die je een paar dagen van tevoren opschrijft. Schrijf op een apart \
+						blad de antwoorden en kijk of je ze na een paar dagen nog weet te beantwoorden. Dit kun je \
+						ook met andere klasgenootjes doen.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Filmpjes en afbeeldingen\n")).add("""
-				Zoek op internet filmpjes of afbeeldingen die je misschien kunt gebruiken. Maak er eventueel \
-				vragen bij voor jezelf. Op de website van SchoolTV kun je veel informatie over veel \
-				onderwerpen vinden en ook op YouTube.""")));
+						Zoek op internet filmpjes of afbeeldingen die je misschien kunt gebruiken. Maak er eventueel \
+						vragen bij voor jezelf. Op de website van SchoolTV kun je veel informatie over veel \
+						onderwerpen vinden en ook op YouTube.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Atlas\n")).add("""
-				Voor aardrijkskunde kun je ook nog eens door de atlas zoeken naar kaarten die met het \
-				onderwerp te maken hebben. Kun je de dingen die je geleerd hebt toepassen op dat kaartje? \
-				Wat zie je allemaal, en waar heeft het mee te maken?""")));
+						Voor aardrijkskunde kun je ook nog eens door de atlas zoeken naar kaarten die met het \
+						onderwerp te maken hebben. Kun je de dingen die je geleerd hebt toepassen op dat kaartje? \
+						Wat zie je allemaal, en waar heeft het mee te maken?""")));
 		document.addInFlow(list);
 
 		document.addInFlow(document.createParagraph());
@@ -1052,47 +1047,47 @@ public class PlannerGenerator {
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Overschrijven\n")).add("""
-				Schrijf de woorden meerdere keren over, zo oefen je de spelling van alle woorden goed.""")));
+						Schrijf de woorden meerdere keren over, zo oefen je de spelling van alle woorden goed.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Flashcards\n")).add("""
-				Maak kaartjes van alle woorden die je moet leren met het Nederlands aan een kant, en de andere taal \
-				aan de andere kant (dit werkt ook voor begrippen en hun betekenis). \
-				Hussel alle kaartjes door elkaar en bekijk de kaartjes 1 voor 1. Bedenk per kaartje wat het woord op \
-				de achterkant is. Je draait het kaartje om en je checkt of je het antwoord goed had. Maak stapeltjes \
-				wist ik/wist ik nog niet. Herhaal alle woorden die je nog niet wist nog een aantal keer. \
-				Om de flashcards een stapje moeilijker te maken kan je ook het woord dat op de achterkant staat \
-				opschrijven op een blaadje. Zo oefen je meteen met het spellen van de woorden.""")));
+						Maak kaartjes van alle woorden die je moet leren met het Nederlands aan een kant, en de andere taal \
+						aan de andere kant (dit werkt ook voor begrippen en hun betekenis). \
+						Hussel alle kaartjes door elkaar en bekijk de kaartjes 1 voor 1. Bedenk per kaartje wat het woord op \
+						de achterkant is. Je draait het kaartje om en je checkt of je het antwoord goed had. Maak stapeltjes \
+						wist ik/wist ik nog niet. Herhaal alle woorden die je nog niet wist nog een aantal keer. \
+						Om de flashcards een stapje moeilijker te maken kan je ook het woord dat op de achterkant staat \
+						opschrijven op een blaadje. Zo oefen je meteen met het spellen van de woorden.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Memory\n")).add("""
-				Maak kaartjes van alle woorden die je moet leren in het Nederlands en de andere taal (dit werkt ook \
-				voor begrippen en hun betekenis). Hussel alle kaartjes en leg ze met de tekst naar beneden. Draai \
-				iedere keer 2 kaartjes om, wanneer je een match hebt haal je de kaartjes uit het spel.""")));
+						Maak kaartjes van alle woorden die je moet leren in het Nederlands en de andere taal (dit werkt ook \
+						voor begrippen en hun betekenis). Hussel alle kaartjes en leg ze met de tekst naar beneden. Draai \
+						iedere keer 2 kaartjes om, wanneer je een match hebt haal je de kaartjes uit het spel.""")));
 		Image rightArrowImage = document.loadSvgImageResource("/rightArrow.svg").setWidth(12).setHeight(8);
 		// noinspection SpellCheckingInspection
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Digitaal overhoorprogramma"))
 				.add(" (bv Slim stampen/Quizlet/Wozzol/Teach2000/blooket)\n").add("""
-				Er zijn online veel overhoorprogramma's te vinden. Zorg ervoor dat je altijd alle moeilijkheidsgraden \
-				doorloopt:\s""")
+						Er zijn online veel overhoorprogramma's te vinden. Zorg ervoor dat je altijd alle moeilijkheidsgraden \
+						doorloopt:\s""")
 				.add("onthouden ").add(rightArrowImage).add(" meerkeuze ").add(rightArrowImage).add(" spellen.")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Leer groepjes met hetzelfde thema tegelijk\n")).add("""
-				Wanneer je woorden groepeert die hetzelfde thema hebben, is het makkelijker om ze te onthouden.""")));
+						Wanneer je woorden groepeert die hetzelfde thema hebben, is het makkelijker om ze te onthouden.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Voorbeeldzinnen verzinnen\n")).add("""
-				Verzin bij alle woorden uit de woordenlijst een nieuwe zin (in die taal) waaruit de betekenis van \
-				het woord blijkt.""")));
+						Verzin bij alle woorden uit de woordenlijst een nieuwe zin (in die taal) waaruit de betekenis van \
+						het woord blijkt.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Plaatjes/ezelsbruggetjes erbij verzinnen\n")).add("""
-				Probeer om ezelsbruggetjes of plaatjes te verzinnen bij de woordenlijst die je moet leren.""")));
+						Probeer om ezelsbruggetjes of plaatjes te verzinnen bij de woordenlijst die je moet leren.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Laten overhoren door iemand anders\n")).add("""
-				Laat je door iemand die je kent overhoren. Dit kan mondeling, maar het is ook verstandig om de \
-				woorden op te schrijven. Zo oefen je ook de spelling van de woorden.""")));
+						Laat je door iemand die je kent overhoren. Dit kan mondeling, maar het is ook verstandig om de \
+						woorden op te schrijven. Zo oefen je ook de spelling van de woorden.""")));
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add(bold("Afdekmethode\n")).add("""
-				Dek de woordjes af met een blaadje. Bedenk in je hoofd wat de vertaling is, verschuif het papiertje \
-				en kijk of je het antwoord goed had. Je kan ook de woorden opschrijven en de spelling controleren.""")));
+						Dek de woordjes af met een blaadje. Bedenk in je hoofd wat de vertaling is, verschuif het papiertje \
+						en kijk of je het antwoord goed had. Je kan ook de woorden opschrijven en de spelling controleren.""")));
 		document.addInFlow(list);
 
 		document.addInFlow(document.createParagraph());
@@ -1352,7 +1347,7 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding time spent table");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("Tijdschema:\n").setFontSize(16)));
+				.add(bold("Tijdschema:\n").setFontSize(headingFontSize)));
 		document.addInFlow(document.createParagraph()
 				.add("Hoe is jouw week gevuld met school, hobby's en sporten? Vul dit hieronder in. Geef elk " +
 				     "tijdsblok een ander kleurtje."));
@@ -1368,8 +1363,8 @@ public class PlannerGenerator {
 		}
 		for (LocalTime time = startOfDay; !time.isAfter(endOfDay); time = time.plusMinutes(30)) {
 			table.addCell(
-					new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(1f))
-							.setTextAlignment(RIGHT).setPaddings(0, 6, -3, 0));
+					new Cell().add(document.createParagraph().add(time.format(TIME_FORMAT)).setMultipliedLeading(0.9f))
+							.setTextAlignment(RIGHT).setPaddings(3, 6, -3, 0));
 			for (int c = 1; c < columnWidths.length; c++) {
 				table.addCell(emptyCell(document));
 			}
@@ -1579,17 +1574,18 @@ public class PlannerGenerator {
 
 	private Cell createCell(WritableDocument document, int rowspan, TextAlignment alignment,
 	                        Consumer<Paragraph> paragraphConsumer) {
-		Paragraph paragraph = document.createParagraph(10.5f).setMargin(0).setMultipliedLeading(1);
+		Paragraph paragraph = document.createParagraph(document.getFontSize() - 0.5f).setMargin(0)
+				.setMultipliedLeading(1);
 		paragraphConsumer.accept(paragraph);
 		Cell cell = new Cell(rowspan, 1).setMargin(0);
 		return cell.setTextAlignment(requireNonNull(alignment)).add(paragraph);
 	}
 
 	/**
-     * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell
-     * border. The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left
-     * borders respectively.
-     */
+	 * Clear a cell border according to the nibble: the last four bits of nibble, if unset, clear (remove) the cell
+	 * border. The four bits (MSB to LSB) are to keep (if set) or clear (if unset) the top, right, bottom and left
+	 * borders respectively.
+	 */
 	private Cell b(int nibble, Cell element) {
 		if ((nibble & 0b00001000) == 0) {
 			element.setBorderTop(Border.NO_BORDER);

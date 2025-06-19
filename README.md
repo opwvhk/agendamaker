@@ -33,13 +33,13 @@ Download het programma
 
 Download het `.jar`-bestand van de laatste release
 * Je vindt ze aan de rechterkant, onder "Releases"
-* Op de pagina kies je voor `agendamaker-0.7.1-full.jar`
+* Op de pagina kies je voor `agendamaker-0.7.2-full.jar`
 * Zet het bestand op een leuke plek neer
 
 Voor Windows ben je klaar; voor Mac nog niet:
 * Download ook het bestand `Unquarantine.zip`
 * Pak dit bestand uit; Je ziet nu een robotje met iets zwarts in zijn hand, en de naam "Unquarantine.app"
-* Sleep het bestand `agendamaker-0.7.1-full.jar` over het robotje
+* Sleep het bestand `agendamaker-0.7.2-full.jar` over het robotje
 
 
 Gebruik het programma

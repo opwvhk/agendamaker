@@ -2,8 +2,6 @@ package opwvhk.planner;
 
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
-import com.itextpdf.io.font.PdfEncodings;
-import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -73,7 +71,6 @@ public class WritableDocument implements Closeable {
 	private boolean pageIsEmpty;
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
-		// font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
 		try (InputStream fontStream = getClass().getResourceAsStream("/PTSans/PTSans-Regular.ttf")) {
 			byte[] ttfBytes = requireNonNull(fontStream).readAllBytes();
 			FontProgram ptSansProgram = FontProgramFactory.createFont(ttfBytes, true);
@@ -155,6 +152,10 @@ public class WritableDocument implements Closeable {
 		if (pdfDocument.getNumberOfPages() == 0) {
 			PdfPage pdfPage = pdfDocument.addNewPage();
 		}
+	}
+
+	public float getFontSize() {
+		return fontSize;
 	}
 
 	/**

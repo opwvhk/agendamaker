@@ -202,8 +202,7 @@ public class Launcher extends DesktopApp {
 		endDateSpinner = createDateSpinner(initialPeriod[1]);
 
 		JLabel actualPlannerPeriodLabel = new JLabel("");
-		JLabel sizeLabel = new JLabel("(wordt 25 sept 2025 t/m 25 sept 2025)");
-		Dimension labelSize = sizeLabel.getPreferredSize();
+		Dimension labelSize = preferredSizeOf("(wordt 25 sept 2025 t/m 25 sept 2025)");
 		actualPlannerPeriodLabel.setMinimumSize(labelSize);
 		actualPlannerPeriodLabel.setPreferredSize(labelSize);
 		ChangeListener plannerPeriodChangeListener = e -> {
@@ -274,6 +273,11 @@ public class Launcher extends DesktopApp {
 		mainInputPanel.setMaximumSize(size);
 
 		return mainInputPanel;
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private static Dimension preferredSizeOf(String text) {
+		return new JLabel(text).getPreferredSize();
 	}
 
 	private @NotNull JPanel createDateTitlesPanel() {
