@@ -71,6 +71,11 @@ public class WritableDocument implements Closeable {
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
 		font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+		// try (InputStream fontStream = getClass().getResourceAsStream("/PTSans/PTSans-Regular.ttf")) {
+		// 	byte[] ttfBytes = requireNonNull(fontStream).readAllBytes();
+		// 	FontProgram ptSansProgram = FontProgramFactory.createFont(ttfBytes, true);
+		// 	font = PdfFontFactory.createFont(ptSansProgram);
+		// }
 		fontSize = DEFAULT_FONT_SIZE;
 
 		PdfWriter pdfWriter = new PdfWriter(output);
@@ -147,6 +152,10 @@ public class WritableDocument implements Closeable {
 		if (pdfDocument.getNumberOfPages() == 0) {
 			PdfPage pdfPage = pdfDocument.addNewPage();
 		}
+	}
+
+	public float getFontSize() {
+		return fontSize;
 	}
 
 	/**
