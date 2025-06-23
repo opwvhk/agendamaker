@@ -65,11 +65,13 @@ import static com.itextpdf.layout.properties.VerticalAlignment.BOTTOM;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SUNDAY;
 import static java.time.Month.APRIL;
+import static java.time.Month.AUGUST;
 import static java.time.Month.DECEMBER;
 import static java.time.Month.FEBRUARY;
 import static java.time.Month.JANUARY;
 import static java.time.Month.JULY;
 import static java.time.Month.JUNE;
+import static java.time.Month.MARCH;
 import static java.time.Month.MAY;
 import static java.time.Month.NOVEMBER;
 import static java.time.Month.OCTOBER;
@@ -465,21 +467,32 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.add(bold("Lestijden en vakanties\n\u00A0").setFontSize(headingFontSize)).setTextAlignment(CENTER));
 		document.addInFlow(document.createParagraph()
-				.add(italic("Lestijden Onderbouw\n\u00A0").setFontSize(smallHeadingFontSize)).setTextAlignment(CENTER));
+				// .add(italic("Lestijden Onderbouw\n\u00A0").setFontSize(smallHeadingFontSize)).setTextAlignment(CENTER));
+				.add(italic("Lestijden Bovenbouw\n\u00A0").setFontSize(smallHeadingFontSize)).setTextAlignment(CENTER));
 
 		UnitValue[] columnWidths = createPercentArray(new float[]{50, 50});
 		Table table = new Table(columnWidths).setAutoLayout().setHorizontalAlignment(HorizontalAlignment.CENTER)
 				.setPadding(0).setMargin(0).setMarginBottom(headingFontSize);
 		for (String cellText : java.util.List.of(
+				// "1. 08:15 - 09:15", "1. 08:15 - 08:55",
+				// "2. 09:15 - 10:15", "2. 08:55 - 09:35",
+				// "pauze", /*       */"pauze",
+				// "3. 10:30 - 11:30", "3. 09:55 - 10:35",
+				// "4. 11:30 - 12:30", "4. 10:35 - 11:15",
+				// "pauze", /*       */"pauze",
+				// "5. 13:00 - 14:00", "5. 11:35 - 12:15",
+				// "6. 14:00 - 15:00", "6. 12:15 - 12:55",
+				// "pauze", /*       */"7. 12:55 - 13:35",
+				// "7. 15:15 - 16:15", "8. 13:35 - 14:15"
 				"1. 08:15 - 09:15", "1. 08:15 - 08:55",
-				"2. 09:15 - 10:15", "2. 08:55 - 09:35",
-				"pauze", /*       */"pauze",
-				"3. 10:30 - 11:30", "3. 09:55 - 10:35",
-				"4. 11:30 - 12:30", "4. 10:35 - 11:15",
-				"pauze", /*       */"pauze",
-				"5. 13:00 - 14:00", "5. 11:35 - 12:15",
-				"6. 14:00 - 15:00", "6. 12:15 - 12:55",
-				"pauze", /*       */"7. 12:55 - 13:35",
+				"pauze", /*       */"2. 08:55 - 09:35",
+				"2. 09:30 - 10:30", "3. 09:35 - 10:15",
+				"3. 10:30 - 11:30", "pauze",
+				"pauze", /*       */"4. 10:35 - 11:15",
+				"4. 12:00 - 13:00", "5. 11:15 - 11:55",
+				"5. 13:00 - 14:00", "pauze",
+				"pauze", /*       */"6. 12:15 - 12:55",
+				"6. 14:15 - 15:15", "7. 12:55 - 13:35",
 				"7. 15:15 - 16:15", "8. 13:35 - 14:15"
 		)) {
 			table.addCell(createCell(document, 1, cellText).setPadding(mmToPt(2)));
@@ -765,12 +778,15 @@ public class PlannerGenerator {
 				"Duits", "Du",
 				"Wiskunde", "Wi",
 				"Science", "Sc",
-				"Osa", "Os",
+				// "Osa", "Os",
 				"Handvaardigheid", "Hv",
 				"Tekenen", "Te",
 				"Lichamelijke Opvoeding", "LO",
-				"Muziek", "Mu",
-				"Discover4U", "D4U"
+				// "Muziek", "Mu",
+				// "Discover4U", "D4U"
+				"Geschiedenis", "Gs",
+				"Aardrijkskunde", "Ak",
+				"Economie", "Ec"
 		)) {
 			table1.addCell(createCell0(document, cellText).setPaddings(0, headingFontSize, 0, 0));
 		}
@@ -1094,20 +1110,23 @@ public class PlannerGenerator {
 						en kijk of je het antwoord goed had. Je kan ook de woorden opschrijven en de spelling controleren.""")));
 		document.addInFlow(list);
 
+		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
 				.add(bold("\nSpecifieke tips voor vakken:").setFontSize(smallHeadingFontSize)));
-		document.addInFlow(document.createParagraph().add(bold("\nOSA:")));
-		document.addInFlow(document.createParagraph().add("""
-				Osa is geen gemakkelijk vak om te leren. Je krijgt heel veel informatie in een les en niet altijd \
-				letterlijke vragen die in de tekst staan tijdens een toets. Er wordt namelijk verwacht van je dat je \
-				de informatie kunt toepassen. Dit kan lastig zijn. Alleen doorlezen is in ieder geval niet voldoende."""));
+		// document.addInFlow(document.createParagraph().add(bold("\nOSA:")));
+		// document.addInFlow(document.createParagraph().add("""
+		// 		Osa is geen gemakkelijk vak om te leren. Je krijgt heel veel informatie in een les en niet altijd \
+		// 		letterlijke vragen die in de tekst staan tijdens een toets. Er wordt namelijk verwacht van je dat je \
+		// 		de informatie kunt toepassen. Dit kan lastig zijn. Alleen doorlezen is in ieder geval niet voldoende."""));
 
-		document.addInFlow(document.createParagraph().add("\n\u00A0"));
-		document.addInFlow(document.createParagraph().add(bold("\nWiskunde:")));
+		// document.addInFlow(document.createParagraph().add("\n\u00A0"));
+		// document.addInFlow(document.createParagraph().add(bold("\nWiskunde:")));
+		document.addInFlow(document.createParagraph().add(bold("\nAardrijkskunde, Geschiedenis en Wiskunde:")));
 		document.addInFlow(document.createParagraph().add("""
 				Wiskunde is een vak waar je niet altijd voor kunt leren. Soms zijn er begrippen die je moet kennen, \
 				deze kun je wel leren."""));
-		document.addInFlow(document.createParagraph().add("Belangrijke dingen om te doen voor OSA en wiskunde zijn:"));
+		// document.addInFlow(document.createParagraph().add("Belangrijke dingen om te doen voor OSA en wiskunde zijn:"));
+		document.addInFlow(document.createParagraph().add("Belangrijke dingen om te doen voor aardrijkskunde, geschiedenis en wiskunde zijn:"));
 		list = document.createList().setListSymbol(LIST_SYMBOL_BULLET);
 		list.add((ListItem) new ListItem().add(document.createParagraph()
 				.add("Maak aantekeningen en stel vragen in de les.")));
@@ -1125,7 +1144,9 @@ public class PlannerGenerator {
 
 		document.addInFlow(document.createParagraph().add(bold("\nHandige websites:").setFontSize(smallHeadingFontSize)));
 		java.util.List<String> usefulWebsitesTitles = java.util.List.of("Algemeen",
-				"Frans", "Engels", "Duits", "Science", "Nederlands", "Wiskunde", "OSA");
+				"Frans", "Engels", "Duits", "Science", "Nederlands", "Wiskunde",
+				// "OSA");
+				"Aardrijkskunde & Geschiedenis");
 		// noinspection SpellCheckingInspection
 		java.util.List<java.util.List<Map.Entry<String, String>>> usefulWebsites = java.util.List.of(
 				java.util.List.of( // Algemeen
@@ -1147,7 +1168,7 @@ public class PlannerGenerator {
 						Map.entry("https://www.reken-taal.be/rekenen/conversies.htm",
 								": om te oefenen met eenheden en omrekenen")
 				), java.util.List.of( // Nederlands
-						Map.entry("https://www.cambiumned.nl/", "\n\n\n\n\n\n")
+						Map.entry("https://www.cambiumned.nl/", "\n\n\n") //""\n\n\n\n\n\n")
 				), java.util.List.of( // Wiskunde
 						Map.entry("", "In de digitale omgeving van je boek kan je ook uitlegfilmpjes vinden"),
 						Map.entry("", "Youtube: Math with Menno"),
@@ -1214,7 +1235,8 @@ public class PlannerGenerator {
 		LOGGER.debug("Adding guide to survive as a freshman");
 		document.startNewPage(false);
 		document.addInFlow(document.createParagraph()
-				.add(bold("Hoe overleef ik de brugklas\n\u00A0").setFontSize(headingFontSize))
+				// .add(bold("Hoe overleef ik de brugklas\n\u00A0").setFontSize(headingFontSize))
+				.add(bold("Schoolregels en afspraken\n\u00A0").setFontSize(headingFontSize))
 				.setTextAlignment(CENTER));
 
 		// First heading: do not start with a newline (for the rest: do)

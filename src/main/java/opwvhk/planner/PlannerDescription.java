@@ -33,13 +33,13 @@ public record PlannerDescription(String title, String schoolYear, int timeTableP
 		Map.Entry<LocalDate, String> firstEntry = sortedDateTitles.firstEntry();
 		LocalDate startDate = firstEntry.getKey().with(makeStartDate);
 		if (!startDate.equals(firstEntry.getKey())) {
-			sortedDateTitles.put(startDate, sortedDateTitles.remove(firstEntry.getKey()));
+			sortedDateTitles.put(startDate, firstEntry.getValue());
 		}
 
 		Map.Entry<LocalDate, String> lastEntry = sortedDateTitles.lastEntry();
 		LocalDate endDate = lastEntry.getKey().with(makeEndDate);
 		if (!endDate.equals(lastEntry.getKey())) {
-			sortedDateTitles.put(endDate, sortedDateTitles.remove(lastEntry.getKey()));
+			sortedDateTitles.put(endDate, lastEntry.getValue());
 		}
 
 		return new PlannerDescription(title, schoolYear, timeTablePages, notesPages, mindmapPages,
