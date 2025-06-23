@@ -93,38 +93,40 @@ public class PlannerGenerator {
 
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
-			LocalDate startDate = LocalDate.of(2024, SEPTEMBER, 2);
-			@SuppressWarnings("UnnecessaryLocalVariable") LocalDate endDate = startDate;
-			// LocalDate endDate = LocalDate.of(2025, FEBRUARY, 6);
-			// LocalDate startDate = LocalDate.of(2025, FEBRUARY, 6);
-			// LocalDate endDate = LocalDate.of(2025, JULY, 19);
+			LocalDate startDate = LocalDate.of(2025, AUGUST, 25);
+			// @SuppressWarnings("UnnecessaryLocalVariable") LocalDate endDate = startDate;
+			// LocalDate endDate = LocalDate.of(2026, FEBRUARY, 6);
+			// LocalDate startDate = LocalDate.of(2026, FEBRUARY, 6);
+			LocalDate endDate = LocalDate.of(2026, JULY, 4);
 
 			// Order doesn't matter, and the map will be truncated to startDate and endDate (see above).
 			NavigableMap<LocalDate, String> allDateTitles = new TreeMap<>();
-			allDateTitles.put(LocalDate.of(2024, SEPTEMBER, 2), "");
-			allDateTitles.put(LocalDate.of(2024, OCTOBER, 26), "Herfstvakantie");
-			allDateTitles.put(LocalDate.of(2024, NOVEMBER, 4), "");
-			allDateTitles.put(LocalDate.of(2024, DECEMBER, 21), "Kerstvakantie");
-			allDateTitles.put(LocalDate.of(2024, DECEMBER, 25), "1e Kerstdag");
-			allDateTitles.put(LocalDate.of(2024, DECEMBER, 26), "2e Kerstdag");
-			allDateTitles.put(LocalDate.of(2024, DECEMBER, 27), "Kerstvakantie");
-			allDateTitles.put(LocalDate.of(2025, JANUARY, 6), "");
-			allDateTitles.put(LocalDate.of(2025, FEBRUARY, 15), "Voorjaarsvakantie");
-			allDateTitles.put(LocalDate.of(2025, FEBRUARY, 24), "");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 19), "Meivakantie");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 21), "1e Paasdag");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 22), "2e Paasdag");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 23), "Meivakantie");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 27), "Koningsdag");
-			allDateTitles.put(LocalDate.of(2025, APRIL, 28), "Meivakantie");
-			allDateTitles.put(LocalDate.of(2025, MAY, 6), "");
-			allDateTitles.put(LocalDate.of(2025, MAY, 29), "Hemelvaart");
-			allDateTitles.put(LocalDate.of(2025, MAY, 30), "dag na Hemelvaart (vrij)");
-			allDateTitles.put(LocalDate.of(2025, MAY, 31), "");
-			allDateTitles.put(LocalDate.of(2025, JUNE, 8), "1e Pinksterdag");
-			allDateTitles.put(LocalDate.of(2025, JUNE, 9), "2e Pinksterdag");
-			allDateTitles.put(LocalDate.of(2025, JUNE, 10), "");
-			allDateTitles.put(LocalDate.of(2025, JULY, 12), "Zomervakantie");
+			allDateTitles.put(LocalDate.of(2025, SEPTEMBER, 2), "");
+			allDateTitles.put(LocalDate.of(2025, OCTOBER, 18), "Herfstvakantie");
+			allDateTitles.put(LocalDate.of(2025, OCTOBER, 27), "");
+			allDateTitles.put(LocalDate.of(2025, DECEMBER, 20), "Kerstvakantie");
+			allDateTitles.put(LocalDate.of(2025, DECEMBER, 25), "1e Kerstdag");
+			allDateTitles.put(LocalDate.of(2025, DECEMBER, 26), "2e Kerstdag");
+			allDateTitles.put(LocalDate.of(2025, DECEMBER, 27), "Kerstvakantie");
+			allDateTitles.put(LocalDate.of(2026, JANUARY, 5), "");
+			allDateTitles.put(LocalDate.of(2026, FEBRUARY, 21), "Voorjaarsvakantie");
+			allDateTitles.put(LocalDate.of(2026, MARCH, 2), "");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 5), "1e Paasdag");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 6), "2e Paasdag");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 7), "");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 18), "Meivakantie");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 27), "Koningsdag");
+			allDateTitles.put(LocalDate.of(2026, APRIL, 28), "Meivakantie");
+ 			allDateTitles.put(LocalDate.of(2026, MAY, 4), "");
+			allDateTitles.put(LocalDate.of(2026, MAY, 5), "Bevrijdingsdag");
+			allDateTitles.put(LocalDate.of(2026, MAY, 6), "");
+			allDateTitles.put(LocalDate.of(2026, MAY, 14), "Hemelvaart");
+			allDateTitles.put(LocalDate.of(2026, MAY, 15), "dag na Hemelvaart (vrij)");
+			allDateTitles.put(LocalDate.of(2026, MAY, 16), "");
+			allDateTitles.put(LocalDate.of(2026, MAY, 24), "1e Pinksterdag");
+			allDateTitles.put(LocalDate.of(2026, MAY, 25), "2e Pinksterdag");
+			allDateTitles.put(LocalDate.of(2026, MAY, 26), "");
+			allDateTitles.put(LocalDate.of(2026, JULY, 4), "Zomervakantie");
 
 			NavigableMap<LocalDate, String> dateTitles = allDateTitles.subMap(startDate, true, endDate, true);
 			dateTitles.putIfAbsent(startDate,
@@ -143,7 +145,7 @@ public class PlannerGenerator {
 							StaticPage.GRADE_LIST,
 							StaticPage.SURVIVE_FRESHMAN_YEAR,
 							// StaticPage.SURVIVE_LEARNING,
-							StaticPage.PLANNING_HAND,
+							// StaticPage.PLANNING_HAND,
 							StaticPage.USEFUL_STUFF,
 							StaticPage.STUDYING_TIPS,
 							StaticPage.HOW_TO_LEARN,
