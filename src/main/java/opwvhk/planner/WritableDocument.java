@@ -1,7 +1,6 @@
 package opwvhk.planner;
 
-import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -71,11 +71,7 @@ public class WritableDocument implements Closeable {
 	private boolean pageIsEmpty;
 
 	private WritableDocument(final PageSize pageSize, final OutputStream output) throws IOException {
-		try (InputStream fontStream = getClass().getResourceAsStream("/PTSans/PTSans-Regular.ttf")) {
-			byte[] ttfBytes = requireNonNull(fontStream).readAllBytes();
-			FontProgram ptSansProgram = FontProgramFactory.createFont(ttfBytes, true);
-			font = PdfFontFactory.createFont(ptSansProgram);
-		}
+		font = loadFont("PTSans/PTSans-Regular.ttf");
 		fontSize = DEFAULT_FONT_SIZE;
 
 		PdfWriter pdfWriter = new PdfWriter(output);
@@ -88,6 +84,20 @@ public class WritableDocument implements Closeable {
 		document.setProperty(Property.LEADING, new Leading(Leading.FIXED, DEFAULT_LINE_SPACING * fontSize));
 
 		pageIsEmpty = true;
+	}
+
+	public static PdfFont loadFont(String fontResourceOrName) throws IOException {
+		if (StandardFonts.isStandardFont(fontResourceOrName)) {
+			return PdfFontFactory.createFont(fontResourceOrName);
+		}
+		ClassLoader loader = Optional.ofNullable(Thread.currentThread().getContextClassLoader())
+				.orElse(WritableDocument.class.getClassLoader());
+		try (InputStream fontStream = loader.getResourceAsStream(fontResourceOrName)) {
+			byte[] ttfBytes = requireNonNull(fontStream).readAllBytes();
+			PdfFont pdfFont = PdfFontFactory.createFont(ttfBytes, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+			pdfFont.setSubset(false);
+			return pdfFont;
+		}
 	}
 
 	public WritableDocument(final PageSize pageSize, float innerMargin, float outerMargin, float topBottomMargin, final OutputStream output)

@@ -1,12 +1,11 @@
 package opwvhk.planner;
 
-import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.exceptions.PdfException;
-import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -70,10 +69,8 @@ import static java.time.Month.DECEMBER;
 import static java.time.Month.FEBRUARY;
 import static java.time.Month.JANUARY;
 import static java.time.Month.JULY;
-import static java.time.Month.JUNE;
 import static java.time.Month.MARCH;
 import static java.time.Month.MAY;
-import static java.time.Month.NOVEMBER;
 import static java.time.Month.OCTOBER;
 import static java.time.Month.SEPTEMBER;
 import static java.time.temporal.ChronoUnit.WEEKS;
@@ -94,10 +91,10 @@ public class PlannerGenerator {
 	public static void main(String[] args) throws IOException {
 		try (OutputStream output = new FileOutputStream("planner.pdf")) {
 			LocalDate startDate = LocalDate.of(2025, AUGUST, 25);
-			// @SuppressWarnings("UnnecessaryLocalVariable") LocalDate endDate = startDate;
+			@SuppressWarnings("UnnecessaryLocalVariable") LocalDate endDate = startDate;
 			// LocalDate endDate = LocalDate.of(2026, FEBRUARY, 6);
 			// LocalDate startDate = LocalDate.of(2026, FEBRUARY, 6);
-			LocalDate endDate = LocalDate.of(2026, JULY, 4);
+			// LocalDate endDate = LocalDate.of(2026, JULY, 4);
 
 			// Order doesn't matter, and the map will be truncated to startDate and endDate (see above).
 			NavigableMap<LocalDate, String> allDateTitles = new TreeMap<>();
@@ -306,8 +303,9 @@ public class PlannerGenerator {
 		document.startNewPage(true);
 		document.startNewPage(true);
 		// Nearly blank back page
+		PdfFont ptSansItalic = WritableDocument.loadFont("PTSans/PTSans-Italic.ttf");
 		Paragraph closingRemarks = document
-				.createParagraph(PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC), 10f)
+				.createParagraph(ptSansItalic, 10f)
 				.setTextAlignment(RIGHT)
 				.add("Gemaakt naar ontwerp van de Huizermaat");
 		Rectangle pageArea = document.getEffectiveArea();
