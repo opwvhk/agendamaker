@@ -96,7 +96,7 @@ public class Launcher extends DesktopApp {
 	public void start() {
 		JComponent header = createHeader();
 
-		JButton generatePlannerButton = createButton("Maak PDF", this::generatePlanner);
+		JButton generatePlannerButton = createButton("Maak agenda", this::generatePlanner);
 		JButton saveButton = createButton("Bewaar invoer", e -> System.out.println(createPlannerDescription(e)));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));

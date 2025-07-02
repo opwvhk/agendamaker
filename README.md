@@ -48,7 +48,7 @@ Gebruik het programma
 1. Start het programma (dubbel klikken)
 2. Lees de aanwijzingen op het scherm
 3. Maak de gewenste aanpassingen aan de invoer
-4. Druk op "Maak PDF"
+4. Druk op "Maak agenda"
 
 Als je op een van de knoppen rechts onderin het scherm drukt, slaat het programma alle instellingen
 op als voorkeursinstellingen. Deze worden weer getoond wanneer je het programma een volgende keer
