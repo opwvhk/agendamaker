@@ -3,6 +3,7 @@ package opwvhk.planner;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjuster;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -21,29 +22,33 @@ import java.util.TreeMap;
 /// @param numClasses         the number of classes per day
 /// @param classItemStructure what class items look like
 /// @param staticPages        the static pages to include
-/// @param dateTitles         the names of all special periods, mapped by start date
+/// @param startDate          the first date in the planner
+/// @param endDate            the last date of the planner
+/// @param dateTitleFromToList the names of all special periods, with their first and last dates
 /// @author <a href="mailto:oscar@westravanholthe.nl">Oscar Westra van Holthe — Kind</a>
 public record PlannerDescription(String title, String schoolYear, int timeTablePages, int notesPages, int mindmapPages,
                                  int numClasses, ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages,
-                                 NavigableMap<LocalDate, String> dateTitles) {
+                                 LocalDate startDate, LocalDate endDate, List<DateTitleFromTo> dateTitleFromToList) {
 
 	public PlannerDescription fixStartAndEndDate(TemporalAdjuster makeStartDate, TemporalAdjuster makeEndDate) {
-		NavigableMap<LocalDate, String> sortedDateTitles = new TreeMap<>(dateTitles);
-
-		Map.Entry<LocalDate, String> firstEntry = sortedDateTitles.firstEntry();
-		LocalDate startDate = firstEntry.getKey().with(makeStartDate);
-		if (!startDate.equals(firstEntry.getKey())) {
-			sortedDateTitles.put(startDate, firstEntry.getValue());
-		}
-
-		Map.Entry<LocalDate, String> lastEntry = sortedDateTitles.lastEntry();
-		LocalDate endDate = lastEntry.getKey().with(makeEndDate);
-		if (!endDate.equals(lastEntry.getKey())) {
-			sortedDateTitles.put(startDate, lastEntry.getValue());
-		}
-
-		return new PlannerDescription(title, schoolYear, timeTablePages, notesPages, mindmapPages,
-				numClasses, classItemStructure, staticPages,
-				sortedDateTitles.subMap(startDate, true, endDate, true));
+		return new PlannerDescription(title, schoolYear, timeTablePages, notesPages, mindmapPages, numClasses,
+				classItemStructure, staticPages, startDate.with(makeStartDate), endDate.with(makeEndDate),
+				dateTitleFromToList);
 	}
+
+	public NavigableMap<LocalDate, String> dateTitles() {
+		NavigableMap<LocalDate, String> textsByStartDate = new TreeMap<>();
+		for (DateTitleFromTo dateTitleFromTo : dateTitleFromToList) {
+			LocalDate from = dateTitleFromTo.from();
+			LocalDate to = dateTitleFromTo.to().plusDays(1); // Start of next text
+			Map.Entry<LocalDate, String> lastEntry = textsByStartDate.floorEntry(from);
+			// Is the last text entry split? Then restore it.
+			// (no need to test for empty string / end of last entry: the result would be the same)
+			String lastEntryText = lastEntry != null ? lastEntry.getValue() : "";
+			textsByStartDate.put(from, dateTitleFromTo.text());
+			textsByStartDate.put(to, lastEntryText);
+		}
+		return textsByStartDate;
+	}
+
 }

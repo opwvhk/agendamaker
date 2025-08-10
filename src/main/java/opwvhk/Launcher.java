@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.miginfocom.swing.MigLayout;
 import opwvhk.planner.ClassItemStructure;
+import opwvhk.planner.DateTitleFromTo;
 import opwvhk.planner.PlannerDescription;
 import opwvhk.planner.PlannerGenerator;
 import opwvhk.planner.StaticPage;
@@ -39,9 +40,6 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntFunction;
 import java.util.prefs.Preferences;
@@ -385,23 +383,10 @@ public class Launcher extends DesktopApp {
 					LocalDate to = toLocalDate((Date) dateTitlesModel.getValueAt(row, 1));
 					String text = (String) dateTitlesModel.getValueAt(row, 2);
 					// No fields are null
-					return new DateTitleFromTo(from, to, text == null ? "" : text);
+					return new DateTitleFromTo(text == null ? "" : text, from, to);
 				})
 				.sorted(Comparator.comparing(DateTitleFromTo::from))
 				.toList();
-		NavigableMap<LocalDate, String> textsByStartDate = new TreeMap<>();
-		for (DateTitleFromTo dateTitleFromTo : dateTitleFromToList) {
-			LocalDate from = dateTitleFromTo.from();
-			LocalDate to = dateTitleFromTo.to().plusDays(1); // Start of next text
-			Map.Entry<LocalDate, String> lastEntry = textsByStartDate.floorEntry(from);
-			// Is the last text entry split? Then restore it.
-			// (no need to test for empty string / end of last entry: the result would be the same)
-			String lastEntryText = lastEntry != null ? lastEntry.getValue() : "";
-			textsByStartDate.put(from, dateTitleFromTo.text());
-			textsByStartDate.put(to, lastEntryText);
-		}
-		textsByStartDate.putIfAbsent(startDate, "");
-		textsByStartDate.putIfAbsent(endDate, "");
 
 		lastUsedSettings.put("startDate", DATE_FORMATTER.format(startDate));
 		lastUsedSettings.put("endDate", DATE_FORMATTER.format(endDate));
@@ -412,8 +397,8 @@ public class Launcher extends DesktopApp {
 		} catch (JsonProcessingException e) {
 			showErrorFor((Component) event.getSource(), e);
 		}
-		return new PlannerDescription("", "", 0, 0, 0, numClasses, classItemStructure,
-				EnumSet.noneOf(StaticPage.class), textsByStartDate);
+		return new PlannerDescription("", "", 0, 0, 0, numClasses,
+				classItemStructure, EnumSet.noneOf(StaticPage.class), startDate, endDate, dateTitleFromToList);
 	}
 
 	private void generatePlanner(ActionEvent event) {
