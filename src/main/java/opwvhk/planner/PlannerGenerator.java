@@ -84,26 +84,43 @@ public class PlannerGenerator {
 			LocalDate startDate = LocalDate.of(2025, AUGUST, 20);
 			LocalDate endDate = LocalDate.of(2026, FEBRUARY, 14);
 
-			//noinspection ExtractMethodRecommender
 			java.util.List<DateTitleFromTo> holidays = new ArrayList<>();
-			// Holidays usually last n weeks + 2 days (weekend)
-			holidays.add(new DateTitleFromTo("Herfstvakantie", LocalDate.of(2025, OCTOBER, 11), 9));
-			holidays.add(new DateTitleFromTo("Kerstvakantie", LocalDate.of(2025, DECEMBER, 20), 16));
-			holidays.add(new DateTitleFromTo("1e Kerstdag", LocalDate.of(2025, DECEMBER, 25)));
-			holidays.add(new DateTitleFromTo("2e Kerstdag", LocalDate.of(2025, DECEMBER, 26)));
-			holidays.add(new DateTitleFromTo("Voorjaarsvakantie", LocalDate.of(2026, FEBRUARY, 14), 9));
-			// holidays.add(new DateTitleFromTo("1e Paasdag", LocalDate.of(2026, APRIL, 5)));
-			holidays.add(new DateTitleFromTo("2e Paasdag", LocalDate.of(2026, APRIL, 6)));
-			holidays.add(new DateTitleFromTo("Meivakantie", LocalDate.of(2026, APRIL, 18), 16));
-			holidays.add(new DateTitleFromTo("Koningsdag", LocalDate.of(2026, APRIL, 27)));
-			holidays.add(new DateTitleFromTo("Bevrijdingsdag", LocalDate.of(2026, MAY, 5)));
-			holidays.add(new DateTitleFromTo("Hemelvaart", LocalDate.of(2026, MAY, 14), 4));
-			// holidays.add(new DateTitleFromTo("Hemelvaart", LocalDate.of(2026, MAY, 14)));
-			// holidays.add(new DateTitleFromTo("(dag na Hemelvaart)", LocalDate.of(2026, MAY, 15)));
-			holidays.add(new DateTitleFromTo("Pinksteren", LocalDate.of(2026, MAY, 23), 3));
-			// holidays.add(new DateTitleFromTo("1e Pinksterdag", LocalDate.of(2026, MAY, 24)));
-			// holidays.add(new DateTitleFromTo("2e Pinksterdag", LocalDate.of(2026, MAY, 25)));
-			holidays.add(new DateTitleFromTo("Zomervakantie", LocalDate.of(2026, JULY, 11), 44));
+			// Holidays usually last 7*n+2 days (n weeks + 1 weekend): 9, 16, 23, 30, 37, 44...
+			boolean splitChristianSpringFeasts = LocalDate.now().getMonth().ordinal() > 15;
+			if (splitChristianSpringFeasts) {
+				//noinspection DuplicatedCode
+				holidays.add(new DateTitleFromTo("Herfstvakantie", LocalDate.of(2025, OCTOBER, 11), 9));
+				holidays.add(new DateTitleFromTo("Kerstvakantie", LocalDate.of(2025, DECEMBER, 20), 16));
+				holidays.add(new DateTitleFromTo("1e Kerstdag", LocalDate.of(2025, DECEMBER, 25)));
+				holidays.add(new DateTitleFromTo("2e Kerstdag", LocalDate.of(2025, DECEMBER, 26)));
+				holidays.add(new DateTitleFromTo("Voorjaarsvakantie", LocalDate.of(2026, FEBRUARY, 14), 9));
+				holidays.add(new DateTitleFromTo("1e Paasdag", LocalDate.of(2026, APRIL, 5)));
+				//noinspection DuplicatedCode
+				holidays.add(new DateTitleFromTo("2e Paasdag", LocalDate.of(2026, APRIL, 6)));
+				holidays.add(new DateTitleFromTo("Meivakantie", LocalDate.of(2026, APRIL, 18), 16));
+				holidays.add(new DateTitleFromTo("Koningsdag", LocalDate.of(2026, APRIL, 27)));
+				holidays.add(new DateTitleFromTo("Bevrijdingsdag", LocalDate.of(2026, MAY, 5)));
+				holidays.add(new DateTitleFromTo("Hemelvaart", LocalDate.of(2026, MAY, 14)));
+				holidays.add(new DateTitleFromTo("(dag na Hemelvaart)", LocalDate.of(2026, MAY, 15)));
+				holidays.add(new DateTitleFromTo("1e Pinksterdag", LocalDate.of(2026, MAY, 24)));
+				holidays.add(new DateTitleFromTo("2e Pinksterdag", LocalDate.of(2026, MAY, 25)));
+				holidays.add(new DateTitleFromTo("Zomervakantie", LocalDate.of(2026, JULY, 11), 44));
+			} else {
+				//noinspection DuplicatedCode
+				holidays.add(new DateTitleFromTo("Herfstvakantie", LocalDate.of(2025, OCTOBER, 11), 9));
+				holidays.add(new DateTitleFromTo("Kerstvakantie", LocalDate.of(2025, DECEMBER, 20), 16));
+				holidays.add(new DateTitleFromTo("1e Kerstdag", LocalDate.of(2025, DECEMBER, 25)));
+				holidays.add(new DateTitleFromTo("2e Kerstdag", LocalDate.of(2025, DECEMBER, 26)));
+				holidays.add(new DateTitleFromTo("Voorjaarsvakantie", LocalDate.of(2026, FEBRUARY, 14), 9));
+				//noinspection DuplicatedCode
+				holidays.add(new DateTitleFromTo("2e Paasdag", LocalDate.of(2026, APRIL, 6)));
+				holidays.add(new DateTitleFromTo("Meivakantie", LocalDate.of(2026, APRIL, 18), 16));
+				holidays.add(new DateTitleFromTo("Koningsdag", LocalDate.of(2026, APRIL, 27)));
+				holidays.add(new DateTitleFromTo("Bevrijdingsdag", LocalDate.of(2026, MAY, 5)));
+				holidays.add(new DateTitleFromTo("Hemelvaart", LocalDate.of(2026, MAY, 14), 4));
+				holidays.add(new DateTitleFromTo("Pinksteren", LocalDate.of(2026, MAY, 23), 3));
+				holidays.add(new DateTitleFromTo("Zomervakantie", LocalDate.of(2026, JULY, 11), 44));
+			}
 
 			int firstYear = holidays.stream().map(DateTitleFromTo::from).mapToInt(LocalDate::getYear).min().getAsInt();
 			int lastYear = holidays.stream().map(DateTitleFromTo::from).mapToInt(LocalDate::getYear).max().getAsInt();
@@ -112,10 +129,10 @@ public class PlannerGenerator {
 					7, ClassItemStructure.CLASS_ROOM_SINGLE,
 					EnumSet.of(
 							// StaticPage.EMERGENCY_PLAN,
+							// StaticPage.SURVIVE_LEARNING,
 							StaticPage.SCHEDULE_AND_VACATIONS,
 							StaticPage.SURVIVE_FRESHMAN_YEAR,
 							StaticPage.PLANNING_HAND,
-							// StaticPage.SURVIVE_LEARNING,
 							StaticPage.USEFUL_STUFF,
 							StaticPage.STUDYING_TIPS,
 							StaticPage.HOW_TO_LEARN,
@@ -156,6 +173,7 @@ public class PlannerGenerator {
 	 * The description of the planner to generate.
 	 */
 	private final PlannerDescription plannerDescription;
+	private final String logoResource;
 	private final float headingFontSize;
 	private final float smallHeadingFontSize;
 
@@ -172,6 +190,8 @@ public class PlannerGenerator {
 		this.plannerDescription = plannerDescription.fixStartAndEndDate(makeStartDate, makeEndDate);
 		this.headingFontSize = WritableDocument.DEFAULT_FONT_SIZE * 16f / 11f;
 		this.smallHeadingFontSize = WritableDocument.DEFAULT_FONT_SIZE * 14f / 11f;
+		this.logoResource = null;
+		// this.logoResource = "/logo-huizermaat.png";
 	}
 
 	/**
@@ -424,13 +444,16 @@ public class PlannerGenerator {
 		document.addInFlow(document.createParagraph()
 				.addTabStops(new TabStop(pageWidth * 0.75f, TabAlignment.LEFT, new SolidLine(.75f)))
 				.add(new Tab()).add(" "));
-		// ImageData logoImageData = ImageDataFactory.create(
-		// 		requireNonNull(getClass().getResource("/logo-huizermaat.png")));
-		// float logoWidth = pageWidth * 0.4f;
-		// Image logoImage = new Image(logoImageData).setWidth(logoWidth)
-		// 		.setHeight(logoWidth * logoImageData.getHeight() / logoImageData.getWidth());
-		// document.addInFlow(
-		// 		logoImage.setFixedPosition(pageArea.getRight() - logoWidth, pageArea.getBottom(), logoWidth));
+
+		if (logoResource != null) {
+			ImageData logoImageData = ImageDataFactory.create(
+					requireNonNull(getClass().getResource(logoResource)));
+			float logoWidth = pageWidth * 0.4f;
+			Image logoImage = new Image(logoImageData).setWidth(logoWidth)
+					.setHeight(logoWidth * logoImageData.getHeight() / logoImageData.getWidth());
+			document.addInFlow(
+					logoImage.setFixedPosition(pageArea.getRight() - logoWidth, pageArea.getBottom(), logoWidth));
+		}
 	}
 
 	@SuppressWarnings("unused")
