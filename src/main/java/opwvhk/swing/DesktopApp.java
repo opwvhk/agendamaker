@@ -59,6 +59,12 @@ public abstract class DesktopApp {
 				.toList();
 	}
 
+	protected <T> T loadIcon(Function<URL, T> iconLoader, String iconResourceName) {
+		URL iconUrl = requireNonNull(getClass().getResource(iconResourceName),
+				() -> "Icon not found: " + iconResourceName);
+		return iconLoader.apply(iconUrl);
+	}
+
 	protected Font loadTrueTypeFont(String fontName,
 	                                @MagicConstant(flags = {Font.PLAIN, Font.BOLD, Font.ITALIC}) int fontStyle,
 	                                float fontSize) throws FontFormatException, IOException {
