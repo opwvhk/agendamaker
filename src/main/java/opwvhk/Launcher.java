@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntFunction;
 import java.util.prefs.Preferences;
@@ -272,9 +273,12 @@ public class Launcher extends DesktopApp {
 		return mainInputPanel;
 	}
 
-	@SuppressWarnings("SameParameterValue")
-	private static Dimension preferredSizeOf(String text) {
-		return new JLabel(text).getPreferredSize();
+	private static LocalDate[] correctPeriod(LocalDate[] range) {
+		assert range != null && range.length == 2;
+		return new LocalDate[]{
+				range[0] == null ? null : range[0].with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
+				range[1] == null ? null : range[1].with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+		};
 	}
 
 	private @NotNull JPanel createDateTitlesPanel() {
@@ -303,12 +307,6 @@ public class Launcher extends DesktopApp {
 		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.setBorder(BorderFactory.createTitledBorder("Belangrijke periodes / vakanties"));
 		return panel;
-	}
-
-	private static @NotNull JButton createButton(String text, ActionListener actionListener) {
-		JButton removeSelectedRowsButton = new JButton(text);
-		removeSelectedRowsButton.addActionListener(actionListener);
-		return removeSelectedRowsButton;
 	}
 
 	private @NotNull JTable createDateTitlesTable() {
@@ -402,24 +400,35 @@ public class Launcher extends DesktopApp {
 	}
 
 	private void generatePlanner(ActionEvent event) {
-		JFileChooser fileChooser = new JFileChooser(new File("."));
-		fileChooser.setDialogTitle("Kies een PDF-bestand om de planner in op te slaan");
-		fileChooser.setApproveButtonText("Opslaan");
-		int result = fileChooser.showSaveDialog(mainWindow);
-		File selectedFile = result == JFileChooser.APPROVE_OPTION ? fileChooser.getSelectedFile() : null;
-		if (selectedFile == null) {
+		File selectedPdfFile = chooseFile(new File("."), "Opslaan",
+				"Kies een PDF-bestand om de planner in op te slaan")
+				.map(Launcher::ensurePdfExtension).orElse(null);
+		if (selectedPdfFile == null) {
 			return;
 		}
 		try {
-			try (OutputStream output = new FileOutputStream(selectedFile)) {
+			try (OutputStream output = new FileOutputStream(selectedPdfFile)) {
 				PlannerDescription plannerDescription = createPlannerDescription(event);
 				PlannerGenerator plannerGenerator = new PlannerGenerator(plannerDescription);
 				plannerGenerator.generate(output);
 			}
-			openFile(selectedFile);
+			openFile(selectedPdfFile);
 		} catch (IOException e) {
 			showErrorFor((Component) event.getSource(), e);
 		}
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private @NotNull Optional<File> chooseFile(File currentDirectory, String approveButtonText, String dialogTitle) {
+		JFileChooser fileChooser = new JFileChooser(currentDirectory);
+		fileChooser.setDialogTitle(dialogTitle);
+		fileChooser.setApproveButtonText(approveButtonText);
+		int result = fileChooser.showSaveDialog(mainWindow);
+		return result == JFileChooser.APPROVE_OPTION ? Optional.of(fileChooser.getSelectedFile()) : Optional.empty();
+	}
+
+	private static File ensurePdfExtension(File file) {
+		return file != null && !file.getName().endsWith(".pdf") ? new File(file.getAbsolutePath() + ".pdf") : file;
 	}
 
 	private static void showErrorFor(Component component, Exception exception) {
@@ -428,14 +437,6 @@ public class Launcher extends DesktopApp {
 		String errorMessage = sw.toString();
 		Window window = SwingUtilities.getWindowAncestor(component);
 		JOptionPane.showMessageDialog(window, errorMessage, ERROR_TITLE, JOptionPane.ERROR_MESSAGE);
-	}
-
-	private static LocalDate[] correctPeriod(LocalDate[] range) {
-		assert range != null && range.length == 2;
-		return new LocalDate[]{
-				range[0] == null ? null : range[0].with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
-				range[1] == null ? null : range[1].with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
-		};
 	}
 
 	private static LocalDate parseOrDefault(String text, LocalDate defaultValue) {
@@ -454,6 +455,17 @@ public class Launcher extends DesktopApp {
 	private static LocalDate toLocalDate(Date date) {
 		// java.util.Date dates depend on the system time zone
 		return date == null ? null : LocalDate.from(date.toInstant().atZone(ZoneId.systemDefault()));
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private static Dimension preferredSizeOf(String text) {
+		return new JLabel(text).getPreferredSize();
+	}
+
+	private static @NotNull JButton createButton(String text, ActionListener actionListener) {
+		JButton removeSelectedRowsButton = new JButton(text);
+		removeSelectedRowsButton.addActionListener(actionListener);
+		return removeSelectedRowsButton;
 	}
 
 	private static @NotNull JSpinner createDateSpinner(LocalDate localDate) {
