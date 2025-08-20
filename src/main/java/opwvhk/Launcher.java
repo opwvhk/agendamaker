@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
+import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
 import com.github.lgooddatepicker.tableeditors.DateTableEditor;
+import com.github.lgooddatepicker.zinternaltools.HighlightInformation;
 import opwvhk.planner.ClassItemStructure;
 import opwvhk.planner.DateTitleFromTo;
 import opwvhk.planner.PlannerDescription;
@@ -15,6 +17,7 @@ import opwvhk.swing.DesktopApp;
 import opwvhk.swing.FormBuilder;
 import opwvhk.swing.NarrowJEditorPane;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -29,53 +32,52 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.IntFunction;
+import java.util.function.BiPredicate;
 import java.util.prefs.Preferences;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import static opwvhk.planner.ClassItemStructure.CLASS_ROOM_SINGLE;
 
-@SuppressWarnings("CommentedOutCode")
 public class Launcher extends DesktopApp {
 	public static final String APPLICATION_NAME = "Agendamaker";
-	private static final Locale LOCALE = Locale.forLanguageTag("NL-nl");
+	private static final Locale LOCALE = Locale.forLanguageTag("nl-NL");
 	private static final String DATE_FORMAT_PATTERN = "d MMM yyyy";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT_PATTERN)
 			.withLocale(LOCALE);
-	private static final ThreadLocal<SimpleDateFormat> SIMPLE_DATE_FORMAT = ThreadLocal.withInitial(
-			() -> new SimpleDateFormat(DATE_FORMAT_PATTERN, LOCALE));
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
 	private static final String ERROR_TITLE = "Oeps... vraag een programmeur...";
+	private static final Color COLOR_HOLIDAY = new Color(219, 231, 242);
+	private static final Color COLOR_SPECIAL = new Color(203, 253, 203);
+	private static final Color COLOR_OTHER = new Color(195, 230, 252);
+	private static final Color COLOR_NORMAL = Color.WHITE; // default
 
+	/// A random date (never seen) to bootstrap the TableDateEditor pairs with.
+	private static final LocalDate FAR_AWAY_DATE = LocalDate.MIN;
 	public static void main(String[] args) {
 		new Launcher().start();
 	}
 
-	private final Preferences lastUsedSettings;
 
-	private JSpinner startDateSpinner;
-	private JSpinner endDateSpinner;
+	private final Preferences lastUsedSettings;
+	private final Holidays holidays;
+
 	private DatePicker startDatePicker;
 	private DatePicker endDatePicker;
 	private JSpinner numClassesSpinner;
@@ -88,6 +90,8 @@ public class Launcher extends DesktopApp {
 				"/icons/schedule2_32.png", "/icons/schedule2_128.png", "/icons/schedule2_256.png");
 		Preferences preferences = Preferences.userNodeForPackage(getClass());
 		lastUsedSettings = preferences.node("lastUsed");
+		// The initial year is not that important; it only serves as a starting point for iteration.
+		holidays = new Holidays(LOCALE, 2025, Holidays.Type.HOLIDAY, Holidays.Type.SPECIAL, Holidays.Type.OTHER, Holidays.Type.NORMAL);
 	}
 
 	@Override
@@ -163,49 +167,15 @@ public class Launcher extends DesktopApp {
 		return textArea;
 	}
 
-	private static void ensureMinimumSize(JFrame frame) {
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				Rectangle bounds = frame.getBounds();
-				Dimension minSize = frame.getMinimumSize();
-				if (bounds.width < minSize.width) {
-					bounds.width = minSize.width;
-				}
-				if (bounds.height < minSize.height) {
-					bounds.height = minSize.height;
-				}
-				frame.setBounds(bounds); // Won't repaint unless it is resized and/or moved
-			}
-		});
-	}
-
-	private static Box vbox(Component... components) {
-		Box box = Box.createVerticalBox();
-		for (Component component : components) {
-			box.add(component);
-		}
-		return box;
-	}
-
-	private static Box hbox(Component... components) {
-		Box box = Box.createHorizontalBox();
-		for (Component component : components) {
-			box.add(component);
-		}
-		return box;
-	}
-
 	private @NotNull JPanel createMainInputPanel() {
 
 		LocalDate[] initialPeriod = correctPeriod(new LocalDate[]{
 				parseOrDefault(lastUsedSettings.get("startDate", null), LocalDate.now()),
 				parseOrDefault(lastUsedSettings.get("endDate", null), LocalDate.now())
 		});
-		startDateSpinner = createDateSpinner(initialPeriod[0]);
-		endDateSpinner = createDateSpinner(initialPeriod[1]);
-		startDatePicker = createDatePicker();
-		endDatePicker = createDatePicker();
+		Pair<DatePicker> datePickerPair = createDatePickerPair(initialPeriod[0], initialPeriod[1]);
+		startDatePicker = datePickerPair.left;
+		endDatePicker = datePickerPair.right;
 
 		JLabel actualPlannerPeriodLabel = new JLabel("");
 		actualPlannerPeriodLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
@@ -213,9 +183,7 @@ public class Launcher extends DesktopApp {
 		labelSize.setSize(labelSize.getWidth(), labelSize.getHeight() + 4);
 		actualPlannerPeriodLabel.setMinimumSize(labelSize);
 		actualPlannerPeriodLabel.setPreferredSize(labelSize);
-		ChangeListener plannerPeriodChangeListener = ignored -> {
-			// LocalDate startDate = toLocalDate((Date) startDateSpinner.getValue());
-			// LocalDate endDate = toLocalDate((Date) endDateSpinner.getValue());
+		DateChangeListener plannerPeriodChangeListener = ignored -> {
 			LocalDate startDate = startDatePicker.getDate();
 			LocalDate endDate = endDatePicker.getDate();
 			LocalDate[] period = correctPeriod(new LocalDate[]{startDate, endDate});
@@ -227,15 +195,9 @@ public class Launcher extends DesktopApp {
 				actualPlannerPeriodLabel.setText("");
 			}
 		};
-		plannerPeriodChangeListener.stateChanged(null); // Set initial label
-		startDateSpinner.addChangeListener(
-				e -> ((SpinnerDateModel) endDateSpinner.getModel()).setStart((Date) startDateSpinner.getValue()));
-		startDateSpinner.addChangeListener(plannerPeriodChangeListener);
-		endDateSpinner.addChangeListener(
-				e -> ((SpinnerDateModel) startDateSpinner.getModel()).setEnd((Date) endDateSpinner.getValue()));
-		endDateSpinner.addChangeListener(plannerPeriodChangeListener);
-		startDatePicker.addDateChangeListener(event -> plannerPeriodChangeListener.stateChanged(null));
-		endDatePicker.addDateChangeListener(event -> plannerPeriodChangeListener.stateChanged(null));
+		plannerPeriodChangeListener.dateChanged(null); // Set initial label
+		startDatePicker.addDateChangeListener(plannerPeriodChangeListener);
+		endDatePicker.addDateChangeListener(plannerPeriodChangeListener);
 
 		numClassesSpinner = new JSpinner(new SpinnerNumberModel(lastUsedSettings.getInt("numClasses", 7), 3, 10, 1));
 		ClassItemStructure classItemStructure = ClassItemStructure.valueOf(
@@ -267,8 +229,6 @@ public class Launcher extends DesktopApp {
 		GridBagConstraints spinnerConstraints = new GridBagConstraints();
 		spinnerConstraints.anchor = GridBagConstraints.EAST;
 		FormBuilder builder = new FormBuilder();
-		// builder.add(0, 0, new JLabel("Startdatum"), startDateSpinner);
-		// builder.add(0, 1, new JLabel("Einddatum"), endDateSpinner);
 		builder.add(0, 0, new JLabel("Startdatum"), startDatePicker);
 		builder.add(0, 1, new JLabel("Einddatum"), endDatePicker);
 		builder.add(0, 2, 1, actualPlannerPeriodLabel);
@@ -289,19 +249,15 @@ public class Launcher extends DesktopApp {
 		return mainInputPanel;
 	}
 
-	private static LocalDate[] correctPeriod(LocalDate[] range) {
-		assert range != null && range.length == 2;
-		return new LocalDate[]{
-				range[0] == null ? null : range[0].with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
-				range[1] == null ? null : range[1].with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
-		};
-	}
-
 	private @NotNull JPanel createDateTitlesPanel() {
 		dateTitlesTable = createDateTitlesTable();
+		int minimumTableWidth = dateTitlesTable.getMinimumSize().width;
 
 		JScrollPane scrollPane = new JScrollPane(dateTitlesTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setMinimumSize(enclose(scrollPane.getMinimumSize(), new Dimension(minimumTableWidth, 0)));
+		scrollPane.setPreferredSize(
+				enclose(scrollPane.getPreferredSize(), scrollPane.getMinimumSize(), new Dimension(0, 500)));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		buttonPanel.add(createButton("Verwijder geselecteerde datumregels", e1 -> {
@@ -314,12 +270,15 @@ public class Launcher extends DesktopApp {
 		}), "tag no");
 		buttonPanel.add(createButton("Voeg datumregel toe", e -> {
 			DefaultTableModel model = (DefaultTableModel) dateTitlesTable.getModel();
-			// model.addRow(new Object[]{toDate(LocalDate.now()), toDate(LocalDate.now()), ""});
 			int lastRow = model.getRowCount() - 1;
-			LocalDate lastDate0 = (LocalDate) model.getValueAt(lastRow, 0);
-			LocalDate lastDate1 = (LocalDate) model.getValueAt(lastRow, 1);
-			LocalDate lastDate = max(lastDate0, lastDate1);
-			model.addRow(new Object[]{lastDate, lastDate, ""});
+			if (lastRow >= 0) {
+				LocalDate lastDate0 = (LocalDate) model.getValueAt(lastRow, 0);
+				LocalDate lastDate1 = (LocalDate) model.getValueAt(lastRow, 1);
+				LocalDate lastDate = max(lastDate0, lastDate1);
+				model.addRow(new Object[]{lastDate, lastDate, ""});
+			} else {
+				model.addRow(new Object[]{startDatePicker.getDate(), startDatePicker.getDate(), ""});
+			}
 		}), "tag yes");
 
 		JPanel panel = new JPanel(new BorderLayout());
@@ -356,7 +315,6 @@ public class Launcher extends DesktopApp {
 			throw new RuntimeException(e);
 		}
 		String[] COLUMN_NAMES = {"Vanaf", "T/m", "Omschrijving"};
-		// Class<?>[] COLUMN_TYPES = {Date.class, Date.class, String.class};
 		Class<?>[] COLUMN_TYPES = {LocalDate.class, LocalDate.class, String.class};
 		DefaultTableModel dateTitlesModel = new DefaultTableModel(COLUMN_NAMES, 0) {
 			@Override
@@ -365,39 +323,34 @@ public class Launcher extends DesktopApp {
 			}
 		};
 		for (DateTitleFromTo row : dateTitleFromToList) {
-			// dateTitlesModel.addRow(new Object[]{toDate(row.from()), toDate(row.to()), row.text()});
 			dateTitlesModel.addRow(new Object[]{row.from(), row.to(), row.text()});
 		}
 		JTable dateTitlesTable = new JTable(dateTitlesModel);
-		dateTitlesTable.setDefaultRenderer(Date.class, new DateCellRenderer());
-		dateTitlesTable.setDefaultEditor(Date.class, new DateCellEditor());
-		dateTitlesTable.setDefaultRenderer(LocalDate.class, createDateTableEditor(1));
-		dateTitlesTable.setDefaultEditor(LocalDate.class, createDateTableEditor(2));
-
 		dateTitlesTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
 		TableColumn column0 = dateTitlesTable.getColumnModel().getColumn(0);
 		TableColumn column1 = dateTitlesTable.getColumnModel().getColumn(1);
 		TableColumn column2 = dateTitlesTable.getColumnModel().getColumn(2);
 
-		// column0.setMinWidth(110);
-		// column0.setMaxWidth(150);
-		// column0.setCellEditor(new DateCellEditor(null, row -> ((Date) dateTitlesModel.getValueAt(row, 1))));
 		column0.setMinWidth(160);
+		column0.setPreferredWidth(200);
 		column0.setMaxWidth(200);
-		column0.setCellEditor(dateTitlesTable.getDefaultEditor(LocalDate.class));
-		// column1.setMinWidth(110);
-		// column1.setMaxWidth(150);
-		// column1.setCellEditor(new DateCellEditor(row -> ((Date) dateTitlesModel.getValueAt(row, 0)), null));
 		column1.setMinWidth(160);
+		column1.setPreferredWidth(200);
 		column1.setMaxWidth(200);
-		column1.setCellEditor(dateTitlesTable.getDefaultEditor(LocalDate.class));
-		column2.setMinWidth(200);
+		column2.setMinWidth(250);
+		column2.setPreferredWidth(400);
+
+		Pair<DateTableEditor> editorPair = createDateTableEditorPair(dateTitlesModel, 0, 1);
+		column0.setCellEditor(editorPair.left());
+		column1.setCellEditor(editorPair.right());
+		Pair<DateTableEditor> editorPair2 = createDateTableEditorPair(dateTitlesModel, 0, 1);
+		column0.setCellRenderer(editorPair2.left());
+		column1.setCellRenderer(editorPair2.right());
+
 		return dateTitlesTable;
 	}
 
 	private @NotNull PlannerDescription createPlannerDescription(ActionEvent event) {
-		// LocalDate startDate = toLocalDate((Date) startDateSpinner.getValue());
-		// LocalDate endDate = toLocalDate((Date) endDateSpinner.getValue());
 		LocalDate startDate = startDatePicker.getDate();
 		LocalDate endDate = endDatePicker.getDate();
 		int numClasses = (Integer) numClassesSpinner.getValue();
@@ -405,8 +358,6 @@ public class Launcher extends DesktopApp {
 		TableModel dateTitlesModel = dateTitlesTable.getModel();
 		List<DateTitleFromTo> dateTitleFromToList = IntStream.range(0, dateTitlesModel.getRowCount())
 				.mapToObj(row -> {
-					// LocalDate from = toLocalDate((Date) dateTitlesModel.getValueAt(row, 0));
-					// LocalDate to = toLocalDate((Date) dateTitlesModel.getValueAt(row, 1));
 					LocalDate from = (LocalDate) dateTitlesModel.getValueAt(row, 0);
 					LocalDate to = (LocalDate) dateTitlesModel.getValueAt(row, 1);
 					String text = (String) dateTitlesModel.getValueAt(row, 2);
@@ -461,6 +412,48 @@ public class Launcher extends DesktopApp {
 		return file != null && !file.getName().endsWith(".pdf") ? new File(file.getAbsolutePath() + ".pdf") : file;
 	}
 
+	private static void ensureMinimumSize(JFrame frame) {
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				Rectangle bounds = frame.getBounds();
+				Dimension minSize = frame.getMinimumSize();
+				if (bounds.width < minSize.width) {
+					bounds.width = minSize.width;
+				}
+				if (bounds.height < minSize.height) {
+					bounds.height = minSize.height;
+				}
+				frame.setBounds(bounds); // Won't repaint unless it is resized and/or moved
+			}
+		});
+	}
+
+	private static Box vbox(Component... components) {
+		Box box = Box.createVerticalBox();
+		for (Component component : components) {
+			box.add(component);
+		}
+		return box;
+	}
+
+	private static Box hbox(Component... components) {
+		Box box = Box.createHorizontalBox();
+		for (Component component : components) {
+			box.add(component);
+		}
+		return box;
+	}
+
+	private static Dimension enclose(Dimension... dimensions) {
+		Dimension result = new Dimension();
+		for (Dimension dim : dimensions) {
+			result.width = Math.max(result.width, dim.width);
+			result.height = Math.max(result.height, dim.height);
+		}
+		return result;
+	}
+
 	private static void showErrorFor(Component component, Exception exception) {
 		StringWriter sw = new StringWriter();
 		exception.printStackTrace(new PrintWriter(sw));
@@ -477,17 +470,6 @@ public class Launcher extends DesktopApp {
 		}
 	}
 
-	private static Date toDate(LocalDate localDate) {
-		// java.util.Date dates depend on the system time zone
-		return localDate == null ? null : Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-	}
-
-	@SuppressWarnings("unused")
-	private static LocalDate toLocalDate(Date date) {
-		// java.util.Date dates depend on the system time zone
-		return date == null ? null : LocalDate.from(date.toInstant().atZone(ZoneId.systemDefault()));
-	}
-
 	@SuppressWarnings("SameParameterValue")
 	private static Dimension preferredSizeOf(String text) {
 		return new JLabel(text).getPreferredSize();
@@ -499,47 +481,138 @@ public class Launcher extends DesktopApp {
 		return removeSelectedRowsButton;
 	}
 
-	private static @NotNull JSpinner createDateSpinner(LocalDate localDate) {
-		return createDateSpinner(localDate, null, null);
-	}
-
-	@SuppressWarnings("SameParameterValue")
-	private static @NotNull JSpinner createDateSpinner(LocalDate localDate, LocalDate minimum, LocalDate maximum) {
-		SpinnerDateModel model = new SpinnerDateModel(toDate(localDate), toDate(minimum), toDate(maximum),
-				Calendar.DAY_OF_MONTH);
-		JSpinner dateSpinner = new JSpinner(model);
-		dateSpinner.setLocale(LOCALE); // The spinner locale MUST be set before creating the editor!
-		dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, DATE_FORMAT_PATTERN));
-		return dateSpinner;
-	}
-
-	private DatePicker createDatePicker() {
-		DatePickerSettings settings = new DatePickerSettings(LOCALE);
+	private DatePicker configure(DatePicker datePicker) {
+		DatePickerSettings settings = datePicker.getSettings();
+		settings.setLocale(LOCALE);
 		settings.setAllowEmptyDates(false);
-		DatePicker datePicker = new DatePicker(settings);
+		settings.setHighlightPolicy(this::highlightDate);
 
-		ImageIcon icon = loadIcon(ImageIcon::new, "/icons/calendar-date-small.png");
-		JTextField dateTextField = datePicker.getComponentDateTextField();
-		dateTextField.setMargin(new Insets(0,0,0,0));
 		JButton toggleButton = datePicker.getComponentToggleCalendarButton();
+		ImageIcon icon = loadIcon(ImageIcon::new, "/icons/calendar-date-small.png");
 		toggleButton.setIcon(icon);
 		toggleButton.setText("");
+
+		JTextField dateTextField = datePicker.getComponentDateTextField();
+		dateTextField.setMargin(new Insets(0, 0, 0, 0));
+
 		return datePicker;
 	}
 
-	private DateTableEditor createDateTableEditor(int clicksToEdit) {
-		DateTableEditor dateTableEditor = new DateTableEditor(true, true, true);
-		dateTableEditor.clickCountToEdit = clicksToEdit;
+	private Pair<DatePicker> createDatePickerPair(LocalDate from, LocalDate to) {
+		if (from.isAfter(to)) {
+			throw new IllegalArgumentException("The from date must not be after the to date");
+		}
 
-		DatePickerSettings settings = dateTableEditor.getDatePickerSettings();
-		settings.setLocale(LOCALE);
-		settings.setAllowEmptyDates(false);
+		DatePicker fromPicker = configure(new DatePicker());
+		fromPicker.setDate(from);
 
-		ImageIcon icon = loadIcon(ImageIcon::new, "/icons/calendar-date-small.png");
-		JButton toggleButton = dateTableEditor.getDatePicker().getComponentToggleCalendarButton();
-		toggleButton.setIcon(icon);
-		toggleButton.setText("");
-		return dateTableEditor;
+		DatePicker toPicker = configure(new DatePicker());
+		toPicker.setDate(to);
+
+		fromPicker.getSettings().setVetoPolicy(date -> !toPicker.getDate().isBefore(date));
+		toPicker.getSettings().setVetoPolicy(date -> !fromPicker.getDate().isAfter(date));
+
+		return new Pair<>(fromPicker, toPicker);
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private Pair<DateTableEditor> createDateTableEditorPair(TableModel dateTitlesModel, int columnFrom, int columnTo) {
+		DateTableEditor fromEditor = new DateTableEditor(true, true, true);
+		fromEditor.clickCountToEdit = 2;
+
+		DateTableEditor toEditor = new DateTableEditor(true, true, true);
+		toEditor.clickCountToEdit = 2;
+
+		// Also configures the date pickers
+		DatePicker fromPicker = configure(fromEditor.getDatePicker());
+		DatePicker toPicker = configure(toEditor.getDatePicker());
+
+		fromPicker.setDate(FAR_AWAY_DATE); // Used because a date needs to be selected when setting the veto policy...
+		toPicker.setDate(FAR_AWAY_DATE);
+		fromPicker.getSettings().setVetoPolicy(date ->
+				isValidDate(fromPicker, date, dateTitlesModel, columnFrom, columnTo,
+						(candidate, compare) -> !candidate.isAfter(compare))
+		);
+		toPicker.getSettings().setVetoPolicy(date ->
+				isValidDate(toPicker, date, dateTitlesModel, columnTo, columnFrom,
+						(candidate, compare) -> !candidate.isBefore(compare))
+		);
+
+		return new Pair<>(fromEditor, toEditor);
+	}
+
+	/// Determines if a date is valid for a pair of columns in the given table model and current editor date.
+	///
+	/// Valid dated must conform to the following:
+	/// * the value is unique within the column
+	/// * the value passes the `validityCheck` with the value in the comparison column of the same row
+	///
+	/// @param picker        the date picker being validated
+	/// @param newValue      a possible value to test
+	/// @param model         the table model to use
+	/// @param editColumn    the column being edited
+	/// @param compareColumn the column to compare to
+	/// @param validityCheck a check to test if the new value is valid in combination with the
+	/// @return true iff the value is valid
+	private static boolean isValidDate(DatePicker picker, LocalDate newValue, TableModel model, int editColumn,
+	                                   int compareColumn, BiPredicate<LocalDate, LocalDate> validityCheck) {
+		// Use the value from the text field to lookup the current value.
+		// This is more reliable than getDate(), as that is lagging in our table scenario.
+		LocalDate previousValue = getDateFromTextField(picker);
+		// Special case: self is always OK
+		if (newValue.equals(previousValue)) {
+			return true;
+		}
+		// First find our row
+		int editingRow = findRow(model, editColumn, previousValue, -1);
+		// Then test uniqueness
+		int newValueRow = findRow(model, editColumn, newValue, editingRow);
+		if (newValueRow >= 0) {
+			return false; // Value is already present in the column
+		}
+		// Finally compare against the value in the other column
+		if (editingRow >= 0) {
+			LocalDate comparedValue = (LocalDate) model.getValueAt(editingRow, compareColumn);
+			return validityCheck.test(newValue, comparedValue);
+		}
+		return true;
+	}
+
+	private static @Nullable LocalDate getDateFromTextField(DatePicker picker) {
+		String text = picker.getText();
+		return Stream.concat(Stream.of(
+						picker.getSettings().getFormatForDatesCommonEra(),
+						picker.getSettings().getFormatForDatesBeforeCommonEra()),
+				picker.getSettings().getFormatsForParsing().stream()
+		).flatMap(format -> {
+			try {
+				LocalDate parsed = LocalDate.parse(text, format);
+				return format.format(parsed).equals(text) ? Stream.of(parsed) : Stream.empty();
+			} catch (Exception ignored) {
+				return Stream.empty();
+			}
+		}).findFirst().orElse(null);
+	}
+
+	private static int findRow(TableModel model, int column, Object value, int rowToSkip) {
+		for (int row = 0; row < model.getRowCount(); row++) {
+			if (row == rowToSkip) {
+				continue;
+			}
+			Object rowValue = model.getValueAt(row, column);
+			if (rowValue.equals(value)) {
+				return row;
+			}
+		}
+		return -1;
+	}
+
+	private static LocalDate[] correctPeriod(LocalDate[] range) {
+		assert range != null && range.length == 2;
+		return new LocalDate[]{
+				range[0] == null ? null : range[0].with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
+				range[1] == null ? null : range[1].with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+		};
 	}
 
 	private static LocalDate min(LocalDate d0, LocalDate d1) {
@@ -550,50 +623,22 @@ public class Launcher extends DesktopApp {
 		return d0.isBefore(d1) ? d1 : d0;
 	}
 
-	private static class DateCellEditor extends DefaultCellEditor {
-		private final JSpinner spinner;
-		private final IntFunction<Date> minValueLookup;
-		private final IntFunction<Date> maxValueLookup;
-
-		public DateCellEditor() {
-			this(null, null);
-		}
-
-		public DateCellEditor(IntFunction<Date> minValueLookup, IntFunction<Date> maxValueLookup) {
-			super(new JTextField());
-			this.minValueLookup = minValueLookup;
-			this.maxValueLookup = maxValueLookup;
-			spinner = createDateSpinner(LocalDate.now());
-			editorComponent = spinner;
-			this.clickCountToStart = 2;
-			delegate = new EditorDelegate() {
-				public void setValue(Object value) {
-					spinner.setValue(value);
-				}
-
-				public Object getCellEditorValue() {
-					return spinner.getValue();
-				}
+	HighlightInformation highlightDate(LocalDate date) {
+		EnumMap<Holidays.Type, String> descriptions = holidays.describe(date);
+		if (!descriptions.isEmpty()) {
+			HighlightInformation info = new HighlightInformation();
+			info.colorBackground = switch (descriptions.keySet().iterator().next()) {
+				case HOLIDAY -> COLOR_HOLIDAY;
+				case SPECIAL -> COLOR_SPECIAL;
+				case OTHER -> COLOR_OTHER;
+				default -> COLOR_NORMAL;
 			};
+			info.colorText = Color.BLACK; // Also default
+			info.tooltipText = String.join("\n", descriptions.values());
+			return info;
 		}
-
-		@Override
-		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row,
-		                                             int column) {
-			super.getTableCellEditorComponent(table, value, isSelected, row, column);
-			SpinnerDateModel model = (SpinnerDateModel) spinner.getModel();
-			model.setStart(minValueLookup == null ? null : minValueLookup.apply(row));
-			model.setEnd(maxValueLookup == null ? null : maxValueLookup.apply(row));
-			return spinner;
-		}
+		return null;
 	}
 
-	private static class DateCellRenderer extends DefaultTableCellRenderer {
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-		                                               boolean hasFocus, int row, int column) {
-			String dateString = SIMPLE_DATE_FORMAT.get().format(value);
-			return super.getTableCellRendererComponent(table, dateString, isSelected, hasFocus, row, column);
-		}
-	}
+	private record Pair<T>(T left, T right) {}
 }

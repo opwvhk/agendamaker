@@ -81,7 +81,7 @@ public record PlannerDescription(String title, String schoolYear, int timeTableP
 
 	public NavigableMap<LocalDate, String> dateTitles() {
 		List<DateTitleFromTo> periodTexts = new ArrayList<>(dateTitleFromToList);
-		// Sort by start (ascending), then end (descending): this ensures
+		// Sort by start (ascending), then end (descending): this ensures the algorithm below works correctly.
 		periodTexts.sort(comparing(DateTitleFromTo::from).thenComparing(comparing(DateTitleFromTo::to).reversed()));
 		NavigableMap<LocalDate, String> textsByStartDate = new TreeMap<>();
 		for (DateTitleFromTo dateTitleFromTo : periodTexts) {
