@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -32,8 +33,8 @@ class PlannerDescriptionTest {
 
 		LocalDate startDate = LocalDate.parse("2025-08-20");
 		LocalDate endDate = LocalDate.parse("2026-02-20");
-		PlannerDescription plannerDescription = new PlannerDescription(null, null, 0, 0, 0, 0, null, EnumSet.noneOf(
-				StaticPage.class), startDate, endDate, holidays);
+		PlannerDescription plannerDescription = new PlannerDescription(Locale.ROOT, null, null, 0, 0, 0, 0, null,
+				EnumSet.noneOf(StaticPage.class), startDate, endDate, holidays);
 
 		assertThat(plannerDescription.dateTitles()).containsExactly(
 				entry(LocalDate.parse("2025-08-20"), ""),

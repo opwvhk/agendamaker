@@ -5,6 +5,7 @@ import java.time.temporal.TemporalAdjuster;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -18,6 +19,7 @@ import static java.util.Objects.requireNonNull;
 /// planner, and map to a text describing the period starting on that date, e.g. "Fall Holiday". The
 /// first date after that usually has an empty string as text, starting a normal school period.
 ///
+/// @param locale              the locale to use for the planner
 /// @param title               tile of the planner, e.g. "My Planner"
 /// @param schoolYear          description of the school year, e.g. "2025 – 2026"
 /// @param timeTablePages      the number of timetable pages
@@ -30,11 +32,12 @@ import static java.util.Objects.requireNonNull;
 /// @param endDate             the last date of the planner
 /// @param dateTitleFromToList the names of all special periods, with their first and last dates
 /// @author <a href="mailto:oscar@westravanholthe.nl">Oscar Westra van Holthe — Kind</a>
-public record PlannerDescription(String title, String schoolYear, int timeTablePages, int notesPages, int mindmapPages,
-                                 int numClasses, ClassItemStructure classItemStructure, EnumSet<StaticPage> staticPages,
-                                 LocalDate startDate, LocalDate endDate, List<DateTitleFromTo> dateTitleFromToList) {
-
+public record PlannerDescription(Locale locale, String title, String schoolYear, int timeTablePages, int notesPages,
+                                 int mindmapPages, int numClasses, ClassItemStructure classItemStructure,
+                                 EnumSet<StaticPage> staticPages, LocalDate startDate, LocalDate endDate,
+                                 List<DateTitleFromTo> dateTitleFromToList) {
 	public PlannerDescription {
+		requireNonNull(locale, "There must be a language to use for the planner");
 		require(title == null || schoolYear != null, "If there is a title, schoolYear cannot be null");
 		require(timeTablePages >= 0, "The number of time table pages cannot be negative.");
 		require(notesPages >= 0, "The number of notes pages cannot be negative.");
@@ -74,8 +77,8 @@ public record PlannerDescription(String title, String schoolYear, int timeTableP
 	}
 
 	public PlannerDescription fixStartAndEndDate(TemporalAdjuster makeStartDate, TemporalAdjuster makeEndDate) {
-		return new PlannerDescription(title, schoolYear, timeTablePages, notesPages, mindmapPages, numClasses,
-				classItemStructure, staticPages, startDate.with(makeStartDate), endDate.with(makeEndDate),
+		return new PlannerDescription(locale, title, schoolYear, timeTablePages, notesPages, mindmapPages,
+				numClasses, classItemStructure, staticPages, startDate.with(makeStartDate), endDate.with(makeEndDate),
 				dateTitleFromToList);
 	}
 

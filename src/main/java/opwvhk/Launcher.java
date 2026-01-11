@@ -70,7 +70,7 @@ public class Launcher extends DesktopApp {
 
 	/// A random date (never seen) to bootstrap the TableDateEditor pairs with.
 	private static final LocalDate FAR_AWAY_DATE = LocalDate.MIN;
-	public static void main(String[] args) {
+	static void main() {
 		new Launcher().start();
 	}
 
@@ -120,7 +120,6 @@ public class Launcher extends DesktopApp {
 
 		mainWindow = createMainWindow();
 		// mainWindow.setLocationRelativeTo(null); // Center on screen
-		// noinspection SpellCheckingInspection
 		mainWindow.getRootPane().putClientProperty("apple.awt.fullscreenable", true);
 		BorderLayout mainWindowLayout = new BorderLayout();
 		mainWindow.setLayout(mainWindowLayout);
@@ -210,7 +209,7 @@ public class Launcher extends DesktopApp {
 		for (ClassItemStructure cis : ClassItemStructure.values()) {
 			JRadioButton structureButton = new JRadioButton("", classItemStructure == cis);
 			structureButton.getModel().setActionCommand(cis.name());
-			structureButton.addActionListener(e -> selectedClassItemStructure.set(cis));
+			structureButton.addActionListener(_ -> selectedClassItemStructure.set(cis));
 			structureChoiceGroup.add(structureButton);
 			JLabel structureImage = new JLabel(icons.get(cis.ordinal()), SwingConstants.LEFT);
 			structureImage.addMouseListener(new MouseAdapter() {
@@ -260,7 +259,7 @@ public class Launcher extends DesktopApp {
 				enclose(scrollPane.getPreferredSize(), scrollPane.getMinimumSize(), new Dimension(0, 500)));
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		buttonPanel.add(createButton("Verwijder geselecteerde datumregels", e1 -> {
+		buttonPanel.add(createButton("Verwijder geselecteerde datumregels", _ -> {
 			DefaultTableModel model = (DefaultTableModel) dateTitlesTable.getModel();
 			int[] selectedRows = dateTitlesTable.getSelectedRows();
 			// Indices are in ascending order; loop backwards to avoid changing them
@@ -268,7 +267,7 @@ public class Launcher extends DesktopApp {
 				model.removeRow(selectedRows[i]);
 			}
 		}), "tag no");
-		buttonPanel.add(createButton("Voeg datumregel toe", e -> {
+		buttonPanel.add(createButton("Voeg datumregel toe", _ -> {
 			DefaultTableModel model = (DefaultTableModel) dateTitlesTable.getModel();
 			int lastRow = model.getRowCount() - 1;
 			if (lastRow >= 0) {
@@ -376,7 +375,7 @@ public class Launcher extends DesktopApp {
 		} catch (JsonProcessingException e) {
 			showErrorFor((Component) event.getSource(), e);
 		}
-		return new PlannerDescription("", "", 0, 0, 0, numClasses,
+		return new PlannerDescription(LOCALE, "", "", 0, 0, 0, numClasses,
 				classItemStructure, EnumSet.noneOf(StaticPage.class), startDate, endDate, dateTitleFromToList);
 	}
 
