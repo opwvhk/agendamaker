@@ -166,7 +166,7 @@ public class PlannerGenerator {
 			LocalDate startDate = switch (recipient) {
 				case NJC_FALL -> LocalDate.of(2025, AUGUST, 25);
 				case RM__FALL -> LocalDate.of(2025, AUGUST, 18);
-				case FER_SPRING, NJC_SPRING -> LocalDate.of(2026, FEBRUARY, 24);
+				case FER_SPRING, NJC_SPRING -> LocalDate.of(2026, MARCH, 2);
 				case RM__SPRING -> LocalDate.of(2026, FEBRUARY, 16);
 				default -> LocalDate.of(2025, SEPTEMBER, 1);
 			};
@@ -195,7 +195,7 @@ public class PlannerGenerator {
 						2, 0, 0, 8, ClassItemStructure.CLASS_ROOM_SINGLE,
 						EnumSet.noneOf(StaticPage.class), startDate, endDate, holidays
 				);
-				case NJC_FALL, NJC_SPRING -> new PlannerDescription(LOCALE_GB, "", schoolYear,
+				case NJC_FALL -> new PlannerDescription(LOCALE_GB, "", schoolYear,
 						2, 0, 0, 8, ClassItemStructure.CLASS_ROOM_SINGLE,
 						EnumSet.of(
 								StaticPage.SCHEDULE_AND_VACATIONS,
@@ -207,6 +207,12 @@ public class PlannerGenerator {
 								StaticPage.PLANNING_INSTRUCTIONS,
 								StaticPage.PERSONAL_GOALS,
 								StaticPage.GRADE_LIST
+						), startDate, endDate, holidays
+				);
+				case NJC_SPRING -> new PlannerDescription(LOCALE_GB, "", schoolYear,
+						2, 0, 0, 8, ClassItemStructure.CLASS_ROOM_SINGLE,
+						EnumSet.of(
+								StaticPage.SCHEDULE_AND_VACATIONS
 						), startDate, endDate, holidays
 				);
 				case RM__FALL, RM__SPRING -> new PlannerDescription(LOCALE_NL, "", schoolYear,
